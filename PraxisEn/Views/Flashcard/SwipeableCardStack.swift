@@ -45,6 +45,9 @@ struct SwipeableCardStack: View {
                 photo: currentCard.photo,
                 isLoadingPhoto: currentCard.isLoadingPhoto,
                 examples: currentCard.examples,
+                synonyms: currentCard.synonyms,
+                antonyms: currentCard.antonyms,
+                collocations: currentCard.collocations,
                 isFlipped: currentCard.isFlipped,
                 onTap: onTap
             )
@@ -125,6 +128,9 @@ struct SwipeableCardStack: View {
             photo: data.photo,
             isLoadingPhoto: data.isLoadingPhoto,
             examples: data.examples,
+            synonyms: data.synonyms,
+            antonyms: data.antonyms,
+            collocations: data.collocations,
             isFlipped: data.isFlipped,
             onTap: {}
         )
@@ -142,6 +148,9 @@ struct FlashcardCardData {
     let photo: UIImage?
     let isLoadingPhoto: Bool
     let examples: [SentencePair]
+    let synonyms: [String]
+    let antonyms: [String]
+    let collocations: [String]
     let isFlipped: Bool
 }
 
@@ -161,6 +170,9 @@ struct FlashcardCardData {
                 photo: UIImage(systemName: "photo"),
                 isLoadingPhoto: false,
                 examples: SentencePair.samples,
+                synonyms: ["desert", "leave"],
+                antonyms: ["keep", "support"],
+                collocations: ["abandon hope"],
                 isFlipped: false
             ),
             nextCard: FlashcardCardData(
@@ -171,6 +183,9 @@ struct FlashcardCardData {
                 photo: nil,
                 isLoadingPhoto: false,
                 examples: [],
+                synonyms: [],
+                antonyms: [],
+                collocations: [],
                 isFlipped: false
             ),
             previousCard: FlashcardCardData(
@@ -181,6 +196,9 @@ struct FlashcardCardData {
                 photo: nil,
                 isLoadingPhoto: false,
                 examples: [],
+                synonyms: [],
+                antonyms: [],
+                collocations: [],
                 isFlipped: false
             ),
             onSwipeLeft: {},

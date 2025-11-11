@@ -61,6 +61,9 @@ struct FlashcardContentView: View {
                         photo: viewModel.currentPhoto,
                         isLoadingPhoto: viewModel.isLoadingPhoto,
                         examples: viewModel.exampleSentences,
+                        synonyms: word.synonymsList,
+                        antonyms: word.antonymsList,
+                        collocations: word.collocationsList,
                         isFlipped: viewModel.isFlipped
                     ),
                     nextCard: viewModel.nextWordPreview.map { next in
@@ -72,6 +75,9 @@ struct FlashcardContentView: View {
                             photo: viewModel.nextWordPreviewPhoto,
                             isLoadingPhoto: false,
                             examples: [],
+                            synonyms: next.synonymsList,
+                            antonyms: next.antonymsList,
+                            collocations: next.collocationsList,
                             isFlipped: false
                         )
                     },
@@ -84,6 +90,9 @@ struct FlashcardContentView: View {
                             photo: viewModel.previousWordPreviewPhoto,
                             isLoadingPhoto: false,
                             examples: [],
+                            synonyms: prev.synonymsList,
+                            antonyms: prev.antonymsList,
+                            collocations: prev.collocationsList,
                             isFlipped: false
                         )
                     },

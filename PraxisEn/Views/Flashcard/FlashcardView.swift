@@ -10,6 +10,9 @@ struct FlashcardView: View {
     let photo: UIImage?
     let isLoadingPhoto: Bool
     let examples: [SentencePair]
+    let synonyms: [String]
+    let antonyms: [String]
+    let collocations: [String]
     let isFlipped: Bool
     let onTap: () -> Void
 
@@ -22,7 +25,10 @@ struct FlashcardView: View {
                 word: word,
                 translation: translation,
                 definition: definition,
-                examples: examples
+                examples: examples,
+                synonyms: synonyms,
+                antonyms: antonyms,
+                collocations: collocations
             )
             .opacity(isFlipped ? 1 : 0)
             .rotation3DEffect(
@@ -64,6 +70,9 @@ struct FlashcardView: View {
             photo: UIImage(systemName: "photo"),
             isLoadingPhoto: false,
             examples: SentencePair.samples,
+            synonyms: ["desert", "leave"],
+            antonyms: ["keep", "support"],
+            collocations: ["abandon hope", "abandon ship"],
             isFlipped: false,
             onTap: {}
         )
@@ -77,6 +86,9 @@ struct FlashcardView: View {
             photo: nil,
             isLoadingPhoto: false,
             examples: [],
+            synonyms: [],
+            antonyms: [],
+            collocations: [],
             isFlipped: true,
             onTap: {}
         )

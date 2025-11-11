@@ -7,6 +7,9 @@ struct FlashcardBackView: View {
     let translation: String
     let definition: String
     let examples: [SentencePair]
+    let synonyms: [String]
+    let antonyms: [String]
+    let collocations: [String]
 
     // MARK: - Body
 
@@ -15,71 +18,122 @@ struct FlashcardBackView: View {
             // White background
             Color.white
 
-            VStack(spacing: AppSpacing.lg) {
-                // Word at top
-                Text(word)
-                    .font(AppTypography.cardTitle)
-                    .foregroundColor(.textSecondary)
-                    .padding(.top, AppSpacing.xl)
-
-                Divider()
-                    .padding(.horizontal, AppSpacing.lg)
-
-                // Translation
-                VStack(spacing: AppSpacing.sm) {
-                    Text("Turkish Translation")
-                        .font(AppTypography.captionText)
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(spacing: AppSpacing.lg) {
+                    // Word at top
+                    Text(word)
+                        .font(AppTypography.cardTitle)
                         .foregroundColor(.textSecondary)
+                        .padding(.top, AppSpacing.xl)
 
-                    Text(translation)
-                        .font(AppTypography.translation)
-                        .foregroundColor(.accentOrange)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.horizontal, AppSpacing.lg)
+                    Divider()
+                        .padding(.horizontal, AppSpacing.lg)
 
-                // Definition
-                if !definition.isEmpty {
+                    // Translation
                     VStack(spacing: AppSpacing.sm) {
-                        Text("Definition")
+                        Text("Turkish Translation")
                             .font(AppTypography.captionText)
                             .foregroundColor(.textSecondary)
 
-                        Text(definition)
-                            .font(AppTypography.bodyText)
-                            .foregroundColor(.textPrimary)
+                        Text(translation)
+                            .font(AppTypography.translation)
+                            .foregroundColor(.accentOrange)
                             .multilineTextAlignment(.center)
-                            .lineLimit(3)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(.horizontal, AppSpacing.lg)
-                }
 
-                Spacer()
+                    // Definition
+                    if !definition.isEmpty {
+                        VStack(spacing: AppSpacing.sm) {
+                            Text("Definition")
+                                .font(AppTypography.captionText)
+                                .foregroundColor(.textSecondary)
 
-                // Example sentences
-                if !examples.isEmpty {
-                    VStack(alignment: .leading, spacing: AppSpacing.md) {
-                        Text("Examples")
-                            .font(AppTypography.captionText)
-                            .foregroundColor(.textSecondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-
-                        ForEach(examples.prefix(2), id: \.id) { example in
-                            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                                Text(example.englishText)
-                                    .font(AppTypography.example)
-                                    .foregroundColor(.textPrimary)
-
-                                Text(example.turkishText)
-                                    .font(AppTypography.captionText)
-                                    .foregroundColor(.textSecondary)
-                                    .italic()
-                            }
-                            .padding(.vertical, AppSpacing.xs)
+                            Text(definition)
+                                .font(AppTypography.bodyText)
+                                .foregroundColor(.textPrimary)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
+                        .padding(.horizontal, AppSpacing.lg)
                     }
-                    .padding(.horizontal, AppSpacing.lg)
-                    .padding(.bottom, AppSpacing.xl)
+
+                    // Synonyms
+                    if !synonyms.isEmpty {
+                        VStack(spacing: AppSpacing.sm) {
+                            Text("Synonyms")
+                                .font(AppTypography.captionText)
+                                .foregroundColor(.textSecondary)
+
+                            Text(synonyms.joined(separator: ", "))
+                                .font(AppTypography.bodyText)
+                                .foregroundColor(.info)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.horizontal, AppSpacing.lg)
+                    }
+
+                    // Antonyms
+                    if !antonyms.isEmpty {
+                        VStack(spacing: AppSpacing.sm) {
+                            Text("Antonyms")
+                                .font(AppTypography.captionText)
+                                .foregroundColor(.textSecondary)
+
+                            Text(antonyms.joined(separator: ", "))
+                                .font(AppTypography.bodyText)
+                                .foregroundColor(.error)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.horizontal, AppSpacing.lg)
+                    }
+
+                    // Collocations
+                    if !collocations.isEmpty {
+                        VStack(spacing: AppSpacing.sm) {
+                            Text("Collocations")
+                                .font(AppTypography.captionText)
+                                .foregroundColor(.textSecondary)
+
+                            Text(collocations.joined(separator: " • "))
+                                .font(AppTypography.bodyText)
+                                .foregroundColor(.textSecondary)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.horizontal, AppSpacing.lg)
+                    }
+
+                    // Example sentences
+                    if !examples.isEmpty {
+                        VStack(alignment: .leading, spacing: AppSpacing.md) {
+                            Text("Examples")
+                                .font(AppTypography.captionText)
+                                .foregroundColor(.textSecondary)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                            ForEach(examples.prefix(3), id: \.id) { example in
+                                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                                    Text(example.englishText)
+                                        .font(AppTypography.example)
+                                        .foregroundColor(.textPrimary)
+                                        .fixedSize(horizontal: false, vertical: true)
+
+                                    Text(example.turkishText)
+                                        .font(AppTypography.captionText)
+                                        .foregroundColor(.textSecondary)
+                                        .italic()
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .padding(.vertical, AppSpacing.xs)
+                            }
+                        }
+                        .padding(.horizontal, AppSpacing.lg)
+                        .padding(.bottom, AppSpacing.xl)
+                    }
                 }
             }
         }
@@ -93,20 +147,26 @@ struct FlashcardBackView: View {
 
 #Preview {
     VStack(spacing: 40) {
-        // With examples
+        // With all data
         FlashcardBackView(
             word: "Abandon",
             translation: "Terk etmek, bırakmak",
             definition: "To leave someone or something behind, typically forever",
-            examples: SentencePair.samples
+            examples: SentencePair.samples,
+            synonyms: ["desert", "leave", "forsake"],
+            antonyms: ["keep", "maintain", "support"],
+            collocations: ["abandon hope", "abandon a plan", "abandon ship"]
         )
 
-        // Without examples
+        // Minimal data
         FlashcardBackView(
             word: "Beautiful",
             translation: "Güzel",
             definition: "Pleasing to the senses or mind",
-            examples: []
+            examples: [],
+            synonyms: [],
+            antonyms: [],
+            collocations: []
         )
     }
     .padding()
