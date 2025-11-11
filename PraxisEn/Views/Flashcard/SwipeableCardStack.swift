@@ -1,0 +1,188 @@
+import SwiftUI
+
+struct SwipeableCardStack: View {
+    // MARK: - Properties
+
+    let currentCard: FlashcardCardData
+    let nextCard: FlashcardCardData?
+    let previousCard: FlashcardCardData?
+    let onSwipeLeft: () -> Void
+    let onSwipeRight: () -> Void
+    let onTap: () -> Void
+
+    @State private var offset: CGFloat = 0
+    @State private var isDragging = false
+
+    private let swipeThreshold: CGFloat = 100
+    private let stackOffset: CGFloat = 10
+    private let stackScale: CGFloat = 0.95
+
+    // MARK: - Body
+
+    var body: some View {
+        ZStack {
+            // Background card (next or previous based on swipe direction)
+            if offset < 0, let next = nextCard {
+                // Swiping left - show next card behind
+                backgroundCard(for: next)
+                    .scaleEffect(stackScale + (1 - stackScale) * abs(offset) / 200)
+                    .offset(x: stackOffset - abs(offset) / 10)
+                    .opacity(0.5 + 0.5 * abs(offset) / 200)
+            } else if offset > 0, let previous = previousCard {
+                // Swiping right - show previous card behind
+                backgroundCard(for: previous)
+                    .scaleEffect(stackScale + (1 - stackScale) * abs(offset) / 200)
+                    .offset(x: -stackOffset + abs(offset) / 10)
+                    .opacity(0.5 + 0.5 * abs(offset) / 200)
+            }
+
+            // Current card
+            FlashcardView(
+                word: currentCard.word,
+                level: currentCard.level,
+                translation: currentCard.translation,
+                definition: currentCard.definition,
+                photo: currentCard.photo,
+                isLoadingPhoto: currentCard.isLoadingPhoto,
+                examples: currentCard.examples,
+                isFlipped: currentCard.isFlipped,
+                onTap: onTap
+            )
+            .offset(x: offset)
+            .rotationEffect(.degrees(Double(offset) / 20))
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        // Only allow horizontal dragging
+                        let horizontalAmount = value.translation.width
+                        let verticalAmount = value.translation.height
+
+                        if abs(horizontalAmount) > abs(verticalAmount) {
+                            offset = horizontalAmount
+                            isDragging = true
+                        }
+                    }
+                    .onEnded { value in
+                        let horizontalAmount = value.translation.width
+                        let verticalAmount = value.translation.height
+
+                        // Only respond to horizontal swipes
+                        if abs(horizontalAmount) > abs(verticalAmount) {
+                            if abs(horizontalAmount) > swipeThreshold {
+                                // Swipe completed
+                                if horizontalAmount < 0 {
+                                    // Swipe left - next word
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        offset = -500
+                                    }
+
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                        onSwipeLeft()
+                                        offset = 0
+                                    }
+                                } else {
+                                    // Swipe right - previous word
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        offset = 500
+                                    }
+
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                        onSwipeRight()
+                                        offset = 0
+                                    }
+                                }
+                            } else {
+                                // Swipe cancelled - return to center
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    offset = 0
+                                }
+                            }
+                        } else {
+                            // Vertical swipe - return to center
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                offset = 0
+                            }
+                        }
+
+                        isDragging = false
+                    }
+            )
+        }
+    }
+
+    // MARK: - Background Card
+
+    private func backgroundCard(for data: FlashcardCardData) -> some View {
+        FlashcardView(
+            word: data.word,
+            level: data.level,
+            translation: data.translation,
+            definition: data.definition,
+            photo: data.photo,
+            isLoadingPhoto: data.isLoadingPhoto,
+            examples: data.examples,
+            isFlipped: data.isFlipped,
+            onTap: {}
+        )
+        .allowsHitTesting(false)
+    }
+}
+
+// MARK: - Card Data Model
+
+struct FlashcardCardData {
+    let word: String
+    let level: String
+    let translation: String
+    let definition: String
+    let photo: UIImage?
+    let isLoadingPhoto: Bool
+    let examples: [SentencePair]
+    let isFlipped: Bool
+}
+
+// MARK: - Preview
+
+#Preview {
+    ZStack {
+        Color.creamBackground
+            .ignoresSafeArea()
+
+        SwipeableCardStack(
+            currentCard: FlashcardCardData(
+                word: "Abandon",
+                level: "B2",
+                translation: "Terk etmek",
+                definition: "To leave behind",
+                photo: UIImage(systemName: "photo"),
+                isLoadingPhoto: false,
+                examples: SentencePair.samples,
+                isFlipped: false
+            ),
+            nextCard: FlashcardCardData(
+                word: "Beautiful",
+                level: "A1",
+                translation: "Güzel",
+                definition: "Pleasing to see",
+                photo: nil,
+                isLoadingPhoto: false,
+                examples: [],
+                isFlipped: false
+            ),
+            previousCard: FlashcardCardData(
+                word: "Challenge",
+                level: "B1",
+                translation: "Meydan okuma",
+                definition: "A difficult task",
+                photo: nil,
+                isLoadingPhoto: false,
+                examples: [],
+                isFlipped: false
+            ),
+            onSwipeLeft: {},
+            onSwipeRight: {},
+            onTap: {}
+        )
+        .padding()
+    }
+}
