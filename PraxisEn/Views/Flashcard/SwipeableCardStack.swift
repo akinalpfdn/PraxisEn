@@ -72,22 +72,26 @@ struct SwipeableCardStack: View {
                                 // Swipe completed
                                 if horizontalAmount < 0 {
                                     // Swipe left - next word
-                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    withAnimation(.easeInOut(duration: 0.25)) {
                                         offset = -500
                                     }
 
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                    // Wait for animation to complete before updating
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                                         onSwipeLeft()
+                                        // Reset offset without animation (card is off-screen)
                                         offset = 0
                                     }
                                 } else {
                                     // Swipe right - previous word
-                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    withAnimation(.easeInOut(duration: 0.25)) {
                                         offset = 500
                                     }
 
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                    // Wait for animation to complete before updating
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                                         onSwipeRight()
+                                        // Reset offset without animation (card is off-screen)
                                         offset = 0
                                     }
                                 }

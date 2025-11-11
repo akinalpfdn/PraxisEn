@@ -92,9 +92,14 @@ class FlashcardViewModel: ObservableObject {
             currentIndex += 1
             currentWord = wordHistory[currentIndex]
         } else {
-            // Load new random word
-            await loadRandomWord()
-            return
+            // Use the preview word if available, otherwise load random
+            if let preview = nextWordPreview {
+                currentWord = preview
+                addToHistory(preview)
+            } else {
+                await loadRandomWord()
+                return
+            }
         }
 
         // Reset flip and load content
