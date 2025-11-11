@@ -84,7 +84,7 @@ class FlashcardViewModel: ObservableObject {
             await loadExamplesForCurrentWord()
 
             // Update previews
-            updatePreviews()
+            await updatePreviews()
 
         } catch {
             print("❌ Error loading random word: \(error)")
@@ -108,13 +108,16 @@ class FlashcardViewModel: ObservableObject {
             }
         }
 
+        // Use preview photo immediately for smooth transition
+        currentPhoto = nextWordPreviewPhoto
+
         // Reset flip and load content
         isFlipped = false
         await loadPhotoForCurrentWord()
         await loadExamplesForCurrentWord()
 
         // Update previews
-        updatePreviews()
+        await updatePreviews()
     }
 
     /// Go to previous word (swipe left)
@@ -127,13 +130,16 @@ class FlashcardViewModel: ObservableObject {
         currentIndex -= 1
         currentWord = wordHistory[currentIndex]
 
+        // Use preview photo immediately for smooth transition
+        currentPhoto = previousWordPreviewPhoto
+
         // Reset flip and load content
         isFlipped = false
         await loadPhotoForCurrentWord()
         await loadExamplesForCurrentWord()
 
         // Update previews
-        updatePreviews()
+        await updatePreviews()
     }
 
     // MARK: - Card Flip
@@ -300,24 +306,16 @@ class FlashcardViewModel: ObservableObject {
     // MARK: - Preview Management
 
     /// Update next and previous word previews
-    private func updatePreviews() {
-        // Previous word preview
+    private func updatePreviews() async {
+        // Set previous word preview
         if currentIndex > 0 {
             previousWordPreview = wordHistory[currentIndex - 1]
-
-            // Preload photo for previous word
-            if let prev = previousWordPreview {
-                Task {
-                    let photo = await UnsplashService.shared.fetchPhotoSafely(for: prev.word)
-                    previousWordPreviewPhoto = photo
-                }
-            }
         } else {
             previousWordPreview = nil
             previousWordPreviewPhoto = nil
         }
 
-        // Next word preview
+        // Set next word preview
         if currentIndex < wordHistory.count - 1 {
             nextWordPreview = wordHistory[currentIndex + 1]
         } else {
@@ -334,13 +332,34 @@ class FlashcardViewModel: ObservableObject {
             }
         }
 
-        // Preload photo for next word
-        if let next = nextWordPreview {
-            Task {
-                let photo = await UnsplashService.shared.fetchPhotoSafely(for: next.word)
-                nextWordPreviewPhoto = photo
+        // Load photos in parallel
+        await withTaskGroup(of: Void.self) { group in
+            // Load previous photo
+            if let prev = previousWordPreview {
+                group.addTask {
+                    let photo = await UnsplashService.shared.fetchPhotoSafely(for: prev.word)
+                    await MainActor.run {
+                        self.previousWordPreviewPhoto = photo
+                    }
+                }
             }
-        } else {
+
+            // Load next photo
+            if let next = nextWordPreview {
+                group.addTask {
+                    let photo = await UnsplashService.shared.fetchPhotoSafely(for: next.word)
+                    await MainActor.run {
+                        self.nextWordPreviewPhoto = photo
+                    }
+                }
+            }
+        }
+
+        // Clear photos if no preview words
+        if previousWordPreview == nil {
+            previousWordPreviewPhoto = nil
+        }
+        if nextWordPreview == nil {
             nextWordPreviewPhoto = nil
         }
     }
