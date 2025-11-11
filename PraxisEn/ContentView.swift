@@ -160,32 +160,56 @@ struct FlashcardContentView: View {
     }
 
     private var hintView: some View {
-        VStack(spacing: AppSpacing.sm) {
-            // Swipe hint
-            HStack(spacing: AppSpacing.lg) {
-                Label("Previous", systemImage: "arrow.left")
-                    .font(AppTypography.captionText)
-                    .foregroundColor(.textTertiary)
+        HStack(spacing: AppSpacing.lg) {
+            // Swipe left hint
+            HStack(spacing: 6) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.accentOrange)
 
-                Text("•")
-                    .foregroundColor(.textTertiary)
-
-                Label("Next", systemImage: "arrow.right")
-                    .font(AppTypography.captionText)
-                    .foregroundColor(.textTertiary)
+                Text("Swipe")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.textSecondary)
             }
 
+            // Circular divider
+            Circle()
+                .fill(Color.textTertiary.opacity(0.3))
+                .frame(width: 4, height: 4)
+
             // Tap hint
-            Text("Tap card to flip")
-                .font(.system(size: 12, weight: .regular))
-                .foregroundColor(.textTertiary)
-                .padding(.top, 4)
+            HStack(spacing: 6) {
+                Image(systemName: "hand.tap.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.accentOrange)
+
+                Text("Tap to flip")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.textSecondary)
+            }
+
+            // Circular divider
+            Circle()
+                .fill(Color.textTertiary.opacity(0.3))
+                .frame(width: 4, height: 4)
+
+            // Swipe right hint
+            HStack(spacing: 6) {
+                Text("Swipe")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.textSecondary)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.accentOrange)
+            }
         }
-        .padding(.vertical, AppSpacing.md)
-        .padding(.horizontal, AppSpacing.xl)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 24)
         .background(
             Capsule()
-                .fill(Color.white.opacity(0.5))
+                .fill(Color.white.opacity(0.8))
+                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
         )
     }
 }

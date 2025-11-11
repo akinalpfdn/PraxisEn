@@ -183,7 +183,7 @@
 
 ---
 
-### ✅ Step 8: Swipe Gesture
+### ✅ Step 8: Swipe Gesture 
 **What to do:**
 - Sağ/sol swipe gesture
 - Card stack effect
