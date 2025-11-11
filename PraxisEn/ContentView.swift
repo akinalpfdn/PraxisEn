@@ -42,8 +42,6 @@ struct ContentView: View {
 
 struct FlashcardContentView: View {
     @ObservedObject var viewModel: FlashcardViewModel
-    @State private var nextCardPhoto: UIImage?
-    @State private var previousCardPhoto: UIImage?
 
     var body: some View {
         VStack(spacing: AppSpacing.xl) {
@@ -71,7 +69,7 @@ struct FlashcardContentView: View {
                             level: next.level,
                             translation: next.turkishTranslation,
                             definition: next.definition,
-                            photo: nextCardPhoto,
+                            photo: viewModel.nextWordPreviewPhoto,
                             isLoadingPhoto: false,
                             examples: [],
                             isFlipped: false
@@ -83,7 +81,7 @@ struct FlashcardContentView: View {
                             level: prev.level,
                             translation: prev.turkishTranslation,
                             definition: prev.definition,
-                            photo: previousCardPhoto,
+                            photo: viewModel.previousWordPreviewPhoto,
                             isLoadingPhoto: false,
                             examples: [],
                             isFlipped: false
@@ -103,24 +101,6 @@ struct FlashcardContentView: View {
                         viewModel.toggleFlip()
                     }
                 )
-                .onChange(of: viewModel.nextWordPreview) { _, newValue in
-                    Task {
-                        if let next = newValue {
-                            nextCardPhoto = await viewModel.getCachedPhoto(for: next.word)
-                        } else {
-                            nextCardPhoto = nil
-                        }
-                    }
-                }
-                .onChange(of: viewModel.previousWordPreview) { _, newValue in
-                    Task {
-                        if let prev = newValue {
-                            previousCardPhoto = await viewModel.getCachedPhoto(for: prev.word)
-                        } else {
-                            previousCardPhoto = nil
-                        }
-                    }
-                }
             } else {
                 // Loading initial word
                 ProgressView("Loading word...")

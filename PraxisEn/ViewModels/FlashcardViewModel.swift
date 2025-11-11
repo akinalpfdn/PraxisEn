@@ -34,6 +34,12 @@ class FlashcardViewModel: ObservableObject {
     /// Previous word preview
     @Published var previousWordPreview: VocabularyWord?
 
+    /// Next word preview photo
+    @Published var nextWordPreviewPhoto: UIImage?
+
+    /// Previous word preview photo
+    @Published var previousWordPreviewPhoto: UIImage?
+
     // MARK: - Dependencies
 
     private let modelContext: ModelContext
@@ -164,11 +170,6 @@ class FlashcardViewModel: ObservableObject {
         print("📸 Photo loaded and set: \(word.word)")
     }
 
-    /// Get cached photo for a word (for preview cards)
-    func getCachedPhoto(for word: String) async -> UIImage? {
-        return await ImageCache.shared.get(word)
-    }
-
     /// Load example sentences for current word (max 3)
     private func loadExamplesForCurrentWord() async {
         guard let word = currentWord else { return }
@@ -292,6 +293,8 @@ class FlashcardViewModel: ObservableObject {
         currentIndex = -1
         nextWordPreview = nil
         previousWordPreview = nil
+        nextWordPreviewPhoto = nil
+        previousWordPreviewPhoto = nil
     }
 
     // MARK: - Preview Management
@@ -301,8 +304,17 @@ class FlashcardViewModel: ObservableObject {
         // Previous word preview
         if currentIndex > 0 {
             previousWordPreview = wordHistory[currentIndex - 1]
+
+            // Preload photo for previous word
+            if let prev = previousWordPreview {
+                Task {
+                    let photo = await UnsplashService.shared.fetchPhotoSafely(for: prev.word)
+                    previousWordPreviewPhoto = photo
+                }
+            }
         } else {
             previousWordPreview = nil
+            previousWordPreviewPhoto = nil
         }
 
         // Next word preview
@@ -320,6 +332,16 @@ class FlashcardViewModel: ObservableObject {
                 print("❌ Error loading next word preview: \(error)")
                 nextWordPreview = nil
             }
+        }
+
+        // Preload photo for next word
+        if let next = nextWordPreview {
+            Task {
+                let photo = await UnsplashService.shared.fetchPhotoSafely(for: next.word)
+                nextWordPreviewPhoto = photo
+            }
+        } else {
+            nextWordPreviewPhoto = nil
         }
     }
 }
