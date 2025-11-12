@@ -9,11 +9,14 @@ struct SwipeableCardStack: View {
     let onSwipeLeft: () -> Void
     let onSwipeRight: () -> Void
     let onTap: () -> Void
+    let onSwipeUp: () -> Void
 
     @State private var offset: CGFloat = 0
+    @State private var verticalOffset: CGFloat = 0
     @State private var isDragging = false
 
     private let swipeThreshold: CGFloat = 100
+    private let swipeUpThreshold: CGFloat = -100
     private let stackOffset: CGFloat = 10
     private let stackScale: CGFloat = 0.95
 
@@ -51,16 +54,21 @@ struct SwipeableCardStack: View {
                 isFlipped: currentCard.isFlipped,
                 onTap: onTap
             )
-            .offset(x: offset)
+            .offset(x: offset, y: verticalOffset)
             .rotationEffect(.degrees(Double(offset) / 20))
             .gesture(
                 DragGesture()
                     .onChanged { value in
-                        // Only allow horizontal dragging
                         let horizontalAmount = value.translation.width
                         let verticalAmount = value.translation.height
 
-                        if abs(horizontalAmount) > abs(verticalAmount) {
+                        // Vertical swipe (only on FRONT side and upward)
+                        if verticalAmount < 0 && !currentCard.isFlipped && abs(verticalAmount) > abs(horizontalAmount) {
+                            verticalOffset = verticalAmount
+                            isDragging = true
+                        }
+                        // Horizontal swipe
+                        else if abs(horizontalAmount) > abs(verticalAmount) {
                             offset = horizontalAmount
                             isDragging = true
                         }
@@ -68,6 +76,19 @@ struct SwipeableCardStack: View {
                     .onEnded { value in
                         let horizontalAmount = value.translation.width
                         let verticalAmount = value.translation.height
+
+                        // Swipe up (from FRONT side only)
+                        if verticalAmount < swipeUpThreshold && !currentCard.isFlipped {
+                            withAnimation(.easeOut(duration: 0.3)) {
+                                verticalOffset = -1000
+                            }
+
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                onSwipeUp()
+                                verticalOffset = 0
+                            }
+                            return
+                        }
 
                         // Only respond to horizontal swipes
                         if abs(horizontalAmount) > abs(verticalAmount) {
@@ -104,13 +125,13 @@ struct SwipeableCardStack: View {
                                     offset = 0
                                 }
                             }
-                        } else {
-                            // Vertical swipe - return to center
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                offset = 0
-                            }
                         }
 
+                        // Reset offsets
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            offset = 0
+                            verticalOffset = 0
+                        }
                         isDragging = false
                     }
             )
@@ -203,7 +224,8 @@ struct FlashcardCardData {
             ),
             onSwipeLeft: {},
             onSwipeRight: {},
-            onTap: {}
+            onTap: {},
+            onSwipeUp: {}
         )
         .padding()
     }

@@ -109,6 +109,11 @@ struct FlashcardContentView: View {
                     },
                     onTap: {
                         viewModel.toggleFlip()
+                    },
+                    onSwipeUp: {
+                        Task {
+                            await viewModel.markCurrentWordAsKnown()
+                        }
                     }
                 )
             } else {

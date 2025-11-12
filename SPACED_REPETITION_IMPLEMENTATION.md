@@ -364,7 +364,7 @@ func previousWord() async {
 
 ---
 
-### Step 4: Swipe Up Gesture Ekle
+### Step 4: Swipe Up Gesture Ekle ✅
 **Dosya**: `PraxisEn/Views/Flashcard/SwipeableCardStack.swift`
 
 **Eklenecek Properties**:
