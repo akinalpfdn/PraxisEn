@@ -125,6 +125,14 @@ struct FlashcardContentView: View {
 
             Spacer()
 
+            // Progress bar
+            ProgressBarView(
+                current: viewModel.knownWordsCount,
+                total: viewModel.totalWordsCount,
+                showAnimation: viewModel.showProgressAnimation
+            )
+            .padding(.bottom, AppSpacing.md)
+
             // Bottom hint
             hintView
         }

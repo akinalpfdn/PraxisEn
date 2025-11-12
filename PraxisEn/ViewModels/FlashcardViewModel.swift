@@ -302,18 +302,27 @@ class FlashcardViewModel: ObservableObject {
     func markCurrentWordAsKnown() async {
         guard let word = currentWord else { return }
 
+        // Mark as known
         word.markAsKnown()
         try? modelContext.save()
 
         await updateKnownWordsCount()
 
-        // Show +1 animation
+        // Show +1 animation (non-blocking, runs in parallel with word transition)
         showProgressAnimation = true
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
-        showProgressAnimation = false
+        Task {
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 sec
+            await MainActor.run {
+                showProgressAnimation = false
+            }
+        }
 
-        // Load next word
-        await loadNextWord()
+        // Wait for swipe up animation to complete (0.3 sec from SwipeableCardStack)
+        try? await Task.sleep(nanoseconds: 350_000_000) // 0.35 sec
+
+        // Go to next word - EXACTLY like swipe left!
+        // (scheduleNextReview will be skipped automatically since word.isKnown = true)
+        await nextWord()
     }
 
     /// Update known words count for progress bar

@@ -178,10 +178,10 @@ final class VocabularyWord {
     /// Schedule next review based on repetition count
     func scheduleNextReview() {
         // Interval table: [1, 3, 7, 14, 30] days
-        let intervals = [1, 3, 7, 14, 30]
+        let intervals = [1, 2, 3, 4, 5]
         let dayInterval = repetitions < intervals.count
             ? intervals[repetitions]
-            : 30
+            : 6
 
         nextReviewDate = Calendar.current.date(
             byAdding: .day,
