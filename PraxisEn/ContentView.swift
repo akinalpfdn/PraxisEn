@@ -32,8 +32,9 @@ struct ContentView: View {
             let vm = FlashcardViewModel(modelContext: modelContext)
             viewModel = vm
 
-            // Load first word
-            await vm.loadRandomWord()
+            // Load first word using spaced repetition
+            await vm.loadNextWord()
+            await vm.updateKnownWordsCount()
         }
     }
 }

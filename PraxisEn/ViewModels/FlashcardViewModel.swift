@@ -40,6 +40,15 @@ class FlashcardViewModel: ObservableObject {
     /// Previous word preview photo
     @Published var previousWordPreviewPhoto: UIImage?
 
+    /// Known words count (for progress bar)
+    @Published var knownWordsCount: Int = 0
+
+    /// Total words count (for progress bar)
+    @Published var totalWordsCount: Int = 3000
+
+    /// Show progress animation (+1 popup)
+    @Published var showProgressAnimation: Bool = false
+
     // MARK: - Dependencies
 
     private let modelContext: ModelContext
@@ -51,6 +60,27 @@ class FlashcardViewModel: ObservableObject {
     }
 
     // MARK: - Word Management
+
+    /// Load next word using spaced repetition algorithm
+    func loadNextWord() async {
+        guard let word = await SpacedRepetitionManager.selectNextWord(
+            from: modelContext,
+            excluding: Array(wordHistory.suffix(10))
+        ) else {
+            // Fallback: use old random method
+            await loadRandomWord()
+            return
+        }
+
+        currentWord = word
+        addToHistory(word)
+
+        isFlipped = false
+        await loadPhotoForCurrentWord()
+        await loadExamplesForCurrentWord()
+        await updatePreviews()
+        await updateKnownWordsCount()
+    }
 
     /// Load a random word
     func loadRandomWord() async {
@@ -93,17 +123,23 @@ class FlashcardViewModel: ObservableObject {
 
     /// Go to next word (swipe right)
     func nextWord() async {
+        // Schedule current word for review
+        if let word = currentWord, !word.isKnown {
+            word.scheduleNextReview()
+            try? modelContext.save()
+        }
+
         // Check if we can move forward in history
         if currentIndex < wordHistory.count - 1 {
             currentIndex += 1
             currentWord = wordHistory[currentIndex]
         } else {
-            // Use the preview word if available, otherwise load random
+            // Use the preview word if available, otherwise load next word
             if let preview = nextWordPreview {
                 currentWord = preview
                 addToHistory(preview)
             } else {
-                await loadRandomWord()
+                await loadNextWord()
                 return
             }
         }
@@ -122,6 +158,12 @@ class FlashcardViewModel: ObservableObject {
 
     /// Go to previous word (swipe left)
     func previousWord() async {
+        // Schedule current word for review
+        if let word = currentWord, !word.isKnown {
+            word.scheduleNextReview()
+            try? modelContext.save()
+        }
+
         guard currentIndex > 0 else {
             print("ℹ️ No previous word")
             return
@@ -254,6 +296,33 @@ class FlashcardViewModel: ObservableObject {
         } catch {
             print("❌ Error saving review: \(error)")
         }
+    }
+
+    /// Mark current word as known (swipe up gesture)
+    func markCurrentWordAsKnown() async {
+        guard let word = currentWord else { return }
+
+        word.markAsKnown()
+        try? modelContext.save()
+
+        await updateKnownWordsCount()
+
+        // Show +1 animation
+        showProgressAnimation = true
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        showProgressAnimation = false
+
+        // Load next word
+        await loadNextWord()
+    }
+
+    /// Update known words count for progress bar
+    func updateKnownWordsCount() async {
+        let descriptor = FetchDescriptor<VocabularyWord>(
+            predicate: #Predicate { $0.isKnown }
+        )
+        let knownWords = (try? modelContext.fetch(descriptor)) ?? []
+        knownWordsCount = knownWords.count
     }
 
     // MARK: - Helper Methods

@@ -120,7 +120,7 @@ func resetKnownStatus() {
 
 ---
 
-### Step 2: SpacedRepetitionManager Oluştur
+### Step 2: SpacedRepetitionManager Oluştur ✅
 **Dosya**: `PraxisEn/Helpers/SpacedRepetitionManager.swift` **(YENİ DOSYA)**
 
 **Amaç**: Kelime seçim algoritması (FlashcardViewModel buradan çağıracak)
@@ -237,7 +237,7 @@ struct ReviewStats {
 
 ---
 
-### Step 3: FlashcardViewModel'i Güncelle
+### Step 3: FlashcardViewModel'i Güncelle ✅
 **Dosya**: `PraxisEn/ViewModels/FlashcardViewModel.swift`
 
 **ÖNEMLİ**: Mevcut functionality KALACAK! Sadece eklemeler yapacağız.
