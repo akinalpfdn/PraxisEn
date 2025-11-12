@@ -52,6 +52,17 @@ final class VocabularyWord {
     /// Date when the word was added to the database
     var createdAt: Date
 
+    // MARK: - Spaced Repetition Fields
+
+    /// User marked this word as "I know this"
+    var isKnown: Bool = false
+
+    /// When to show this word next for review
+    var nextReviewDate: Date?
+
+    /// Consecutive successful reviews
+    var repetitions: Int = 0
+
     // MARK: - Computed Properties
 
     /// Returns synonyms as an array
@@ -100,6 +111,12 @@ final class VocabularyWord {
         case "B2": return 4
         default: return 4
         }
+    }
+
+    /// Returns true if word is due for review today
+    var isDueForReview: Bool {
+        guard let reviewDate = nextReviewDate else { return true }
+        return reviewDate <= Date()
     }
 
     // MARK: - Initialization
@@ -154,6 +171,37 @@ final class VocabularyWord {
         isLearned = false
         reviewCount = 0
         lastReviewedDate = nil
+    }
+
+    // MARK: - Spaced Repetition Methods
+
+    /// Schedule next review based on repetition count
+    func scheduleNextReview() {
+        // Interval table: [1, 3, 7, 14, 30] days
+        let intervals = [1, 3, 7, 14, 30]
+        let dayInterval = repetitions < intervals.count
+            ? intervals[repetitions]
+            : 30
+
+        nextReviewDate = Calendar.current.date(
+            byAdding: .day,
+            value: dayInterval,
+            to: Date()
+        )
+        repetitions += 1
+    }
+
+    /// Mark word as known (exclude from rotation)
+    func markAsKnown() {
+        isKnown = true
+        nextReviewDate = nil
+    }
+
+    /// Reset known status (return to unknown)
+    func resetKnownStatus() {
+        isKnown = false
+        repetitions = 0
+        nextReviewDate = Date()
     }
 }
 
