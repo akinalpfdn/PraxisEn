@@ -37,6 +37,12 @@ struct SwipeableCardStack: View {
                     .scaleEffect(stackScale + (1 - stackScale) * abs(offset) / 200)
                     .offset(x: -stackOffset + abs(offset) / 10)
                     .opacity(0.5 + 0.5 * abs(offset) / 200)
+            } else if verticalOffset < 0, let next = nextCard {
+                // Swiping up - show next card behind
+                backgroundCard(for: next)
+                    .scaleEffect(stackScale + (1 - stackScale) * abs(verticalOffset) / 200)
+                    .offset(y: stackOffset - abs(verticalOffset) / 10)
+                    .opacity(0.5 + 0.5 * abs(verticalOffset) / 200)
             }
             
             // Current card
