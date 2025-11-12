@@ -317,9 +317,7 @@ class FlashcardViewModel: ObservableObject {
             }
         }
 
-        // Wait for swipe up animation to complete (0.3 sec from SwipeableCardStack)
-        try? await Task.sleep(nanoseconds: 350_000_000) // 0.35 sec
-
+        // No need to sleep here - DispatchQueue.main.asyncAfter already waited 0.3s!
         // Go to next word - EXACTLY like swipe left!
         // (scheduleNextReview will be skipped automatically since word.isKnown = true)
         await nextWord()

@@ -88,9 +88,10 @@ struct SwipeableCardStack: View {
                             withAnimation(.easeOut(duration: 0.3)) {
                                 verticalOffset = -1000
                             }
-                            
+
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                 onSwipeUp()
+                                // Reset offset without animation (card is off-screen)
                                 verticalOffset = 0
                             }
                             return
