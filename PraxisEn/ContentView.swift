@@ -49,7 +49,7 @@ struct FlashcardContentView: View {
             // Header
             headerView
 
-            Spacer()
+           
 
             // Flashcard
             if let word = viewModel.currentWord {
@@ -122,8 +122,9 @@ struct FlashcardContentView: View {
                     .font(AppTypography.bodyText)
                     .foregroundColor(.textSecondary)
             }
-
-            Spacer()
+// Bottom hint
+            hintView
+            //Spacer()
 
             // Progress bar
             ProgressBarView(
@@ -133,8 +134,7 @@ struct FlashcardContentView: View {
             )
             .padding(.bottom, AppSpacing.md)
 
-            // Bottom hint
-            hintView
+            
         }
         .padding(AppSpacing.lg)
     }
@@ -163,57 +163,70 @@ struct FlashcardContentView: View {
     }
 
     private var hintView: some View {
-        HStack(spacing: AppSpacing.lg) {
-            // Swipe left hint
-            HStack(spacing: 6) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.accentOrange)
-
-                Text("Swipe")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.textSecondary)
-            }
-
-            // Circular divider
-            Circle()
-                .fill(Color.textTertiary.opacity(0.3))
-                .frame(width: 4, height: 4)
-
+        VStack(){
             // Tap hint
             HStack(spacing: 6) {
-                Image(systemName: "hand.tap.fill")
+                Image(systemName: "chevron.up")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.accentOrange)
 
-                Text("Tap to flip")
+                Text("Swipe Up to mark as known")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.textSecondary)
             }
-
-            // Circular divider
-            Circle()
-                .fill(Color.textTertiary.opacity(0.3))
-                .frame(width: 4, height: 4)
-
-            // Swipe right hint
-            HStack(spacing: 6) {
-                Text("Swipe")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.textSecondary)
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.accentOrange)
-            }
+            HStack(spacing: AppSpacing.lg) {
+                // Swipe left hint
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.accentOrange)
+                    
+                    Text("Swipe")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.textSecondary)
+                }
+                
+                // Circular divider
+                Circle()
+                    .fill(Color.textTertiary.opacity(0.3))
+                    .frame(width: 4, height: 4)
+                
+                // Tap hint
+                HStack(spacing: 6) {
+                    Image(systemName: "hand.tap.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.accentOrange)
+                    
+                    Text("Tap to flip")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.textSecondary)
+                }
+                
+                // Circular divider
+                Circle()
+                    .fill(Color.textTertiary.opacity(0.3))
+                    .frame(width: 4, height: 4)
+                
+                // Swipe right hint
+                HStack(spacing: 6) {
+                    Text("Swipe")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.textSecondary)
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.accentOrange)
+                }
+            }.padding(.vertical, 8)
+            
         }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 24)
-        .background(
-            Capsule()
-                .fill(Color.white.opacity(0.8))
-                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
-        )
+        .padding(.vertical, 8)
+                    .padding(.horizontal, 24)
+                    .background(
+                        Capsule()
+                            .fill(Color.white.opacity(0.4))
+                            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
+                    )
     }
 }
 
