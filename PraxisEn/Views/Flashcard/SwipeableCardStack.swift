@@ -8,14 +8,14 @@ struct SwipeableCardStack: View {
     let previousCard: FlashcardCardData?
     let onSwipeLeft: () -> Void
     let onSwipeRight: () -> Void
-    let onTap: () -> Void
+    let onTap: () -> Void 
     let onSwipeUp: () -> Void
 
-    @State private var offset: CGFloat = 0
+    @State private var offset: CGFloat = 0 
     @State private var verticalOffset: CGFloat = 0
     @State private var isDragging = false
 
-    private let swipeThreshold: CGFloat = 100
+    private let swipeThreshold: CGFloat = 100 
     private let swipeUpThreshold: CGFloat = -100
     private let stackOffset: CGFloat = 10
     private let stackScale: CGFloat = 0.95
@@ -38,7 +38,7 @@ struct SwipeableCardStack: View {
                     .offset(x: -stackOffset + abs(offset) / 10)
                     .opacity(0.5 + 0.5 * abs(offset) / 200)
             }
-
+            
             // Current card
             FlashcardView(
                 word: currentCard.word,
@@ -61,7 +61,7 @@ struct SwipeableCardStack: View {
                     .onChanged { value in
                         let horizontalAmount = value.translation.width
                         let verticalAmount = value.translation.height
-
+                        
                         // Vertical swipe (only on FRONT side and upward)
                         if verticalAmount < 0 && !currentCard.isFlipped && abs(verticalAmount) > abs(horizontalAmount) {
                             verticalOffset = verticalAmount
@@ -76,20 +76,20 @@ struct SwipeableCardStack: View {
                     .onEnded { value in
                         let horizontalAmount = value.translation.width
                         let verticalAmount = value.translation.height
-
+                        
                         // Swipe up (from FRONT side only)
                         if verticalAmount < swipeUpThreshold && !currentCard.isFlipped {
                             withAnimation(.easeOut(duration: 0.3)) {
                                 verticalOffset = -1000
                             }
-
+                            
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                                 onSwipeUp()
                                 verticalOffset = 0
                             }
                             return
                         }
-
+                        
                         // Only respond to horizontal swipes
                         if abs(horizontalAmount) > abs(verticalAmount) {
                             if abs(horizontalAmount) > swipeThreshold {
@@ -99,7 +99,7 @@ struct SwipeableCardStack: View {
                                     withAnimation(.easeInOut(duration: 0.25)) {
                                         offset = -500
                                     }
-
+                                    
                                     // Wait for animation to complete before updating
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                                         onSwipeLeft()
@@ -111,7 +111,7 @@ struct SwipeableCardStack: View {
                                     withAnimation(.easeInOut(duration: 0.25)) {
                                         offset = 500
                                     }
-
+                                    
                                     // Wait for animation to complete before updating
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                                         onSwipeRight()
@@ -125,17 +125,18 @@ struct SwipeableCardStack: View {
                                     offset = 0
                                 }
                             }
+                        } else {
+                            // Vertical swipe - return to center
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                offset = 0
+                                verticalOffset = 0
+                            }
+                            
+                            isDragging = false
                         }
-
-                        // Reset offsets
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            offset = 0
-                            verticalOffset = 0
-                        }
-                        isDragging = false
+                        
                     }
-            )
-        }
+        )}
     }
 
     // MARK: - Background Card
