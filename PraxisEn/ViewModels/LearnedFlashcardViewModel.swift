@@ -33,21 +33,23 @@ class LearnedFlashcardViewModel: ObservableObject {
 
     init(modelContext: ModelContext, wordID: String, allLearnedWordIDs: [String]) {
         self.modelContext = modelContext
-        
+
         // Fetch all learned words based on the provided IDs
         let predicate = #Predicate<VocabularyWord> { word in
             allLearnedWordIDs.contains(word.word)
         }
         let descriptor = FetchDescriptor<VocabularyWord>(predicate: predicate, sortBy: [SortDescriptor(\.word)])
-        
+
         do {
-            self.allLearnedWords = try modelContext.fetch(descriptor)
+            let fetchedWords = try modelContext.fetch(descriptor)
+            // Shuffle the words for random flashcard order
+            self.allLearnedWords = fetchedWords.shuffled()
         } catch {
             print("Failed to fetch learned words: \(error)")
             self.allLearnedWords = []
         }
 
-        // Find the starting index and word
+        // Find the starting index and word (search in shuffled array)
         if let startingIndex = allLearnedWords.firstIndex(where: { $0.word == wordID }) {
             self.currentIndex = startingIndex
             self.currentWord = allLearnedWords[startingIndex]
