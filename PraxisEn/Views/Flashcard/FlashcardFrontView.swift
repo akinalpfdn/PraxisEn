@@ -30,9 +30,9 @@ struct FlashcardFrontView: View {
             VStack {
                 Spacer()
 
-                // Word display
+                // Word display with dynamic font size
                 Text(word)
-                    .font(AppTypography.wordDisplay)
+                    .font(.system(size: dynamicFontSize, weight: .bold, design: .rounded))
                     .foregroundColor(.textPrimary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, AppSpacing.lg)
@@ -93,6 +93,20 @@ struct FlashcardFrontView: View {
         case "B1": return "🟠"
         case "B2": return "🔴"
         default: return "⚪️"
+        }
+    }
+
+    /// Dynamic font size based on word length
+    private var dynamicFontSize: CGFloat {
+        let wordLength = word.count
+
+        switch wordLength {
+        case 0...9:
+            return 48  // Large font for short words
+        case 10...12:
+            return 40  // Medium font for medium words 
+        default:
+            return 32 // Smallest font for very long words
         }
     }
 }

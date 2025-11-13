@@ -192,7 +192,7 @@ struct FlashcardCardData {
 
         SwipeableCardStack(
             currentCard: FlashcardCardData(
-                word: "Abandon",
+                word: "recommendation",
                 level: "B2",
                 translation: "Terk etmek",
                 definition: "To leave behind",

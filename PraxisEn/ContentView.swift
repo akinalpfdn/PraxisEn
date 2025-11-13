@@ -45,7 +45,7 @@ struct FlashcardContentView: View {
     @ObservedObject var viewModel: FlashcardViewModel
 
     var body: some View {
-        VStack(spacing: AppSpacing.xl) {
+        VStack(spacing: AppSpacing.lg) {
             // Header
             headerView
 
