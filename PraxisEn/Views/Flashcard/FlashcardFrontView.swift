@@ -7,6 +7,7 @@ struct FlashcardFrontView: View {
     let level: String
     let photo: UIImage?
     let isLoadingPhoto: Bool
+    let onPlayAudio: () -> Void
 
     // MARK: - Body
 
@@ -24,6 +25,31 @@ struct FlashcardFrontView: View {
                     .clipped()
                     .opacity(0.7)  // Light background effect
                     .transition(.opacity.animation(.easeIn(duration: 0.3)))
+            }
+
+            // Speaker button (top-right)
+            VStack {
+                HStack {
+                    Spacer()
+
+                    Button(action: onPlayAudio) {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.accentOrange)
+                            .padding(12)
+                            .background(
+                                Circle()
+                                    .fill(Color.white.opacity(0.6))
+                                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+                            )
+                    }
+                    .padding(.top, AppSpacing.md)
+                    .padding(.trailing, AppSpacing.md)
+
+                   // Spacer()
+                }
+
+                Spacer()
             }
 
             // Content overlay - always visible
@@ -134,7 +160,8 @@ struct BlurView: UIViewRepresentable {
             word: "Abandon",
             level: "B2",
             photo: UIImage(systemName: "photo"),
-            isLoadingPhoto: false
+            isLoadingPhoto: false,
+            onPlayAudio: { print("Play audio") }
         )
 
         // Loading state
@@ -142,7 +169,8 @@ struct BlurView: UIViewRepresentable {
             word: "Learning",
             level: "A1",
             photo: nil,
-            isLoadingPhoto: true
+            isLoadingPhoto: true,
+            onPlayAudio: { print("Play audio") }
         )
 
         // Placeholder state
@@ -150,7 +178,8 @@ struct BlurView: UIViewRepresentable {
             word: "Beautiful",
             level: "A2",
             photo: nil,
-            isLoadingPhoto: false
+            isLoadingPhoto: false,
+            onPlayAudio: { print("Play audio") }
         )
     }
     .padding()

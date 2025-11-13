@@ -379,6 +379,14 @@ class FlashcardViewModel: ObservableObject {
         previousWordPreviewPhoto = nil
     }
 
+    // MARK: - Audio Playback
+
+    /// Play pronunciation audio for current word
+    func playWordAudio() {
+        guard let word = currentWord else { return }
+        AudioManager.shared.play(word: word.word)
+    }
+
     // MARK: - Preview Management
 
     /// Update next and previous word previews

@@ -114,6 +114,9 @@ struct FlashcardContentView: View {
                         Task {
                             await viewModel.markCurrentWordAsKnown()
                         }
+                    },
+                    onPlayAudio: {
+                        viewModel.playWordAudio()
                     }
                 )
             } else {

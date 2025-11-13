@@ -8,8 +8,9 @@ struct SwipeableCardStack: View {
     let previousCard: FlashcardCardData?
     let onSwipeLeft: () -> Void
     let onSwipeRight: () -> Void
-    let onTap: () -> Void 
+    let onTap: () -> Void
     let onSwipeUp: () -> Void
+    let onPlayAudio: () -> Void
 
     @State private var offset: CGFloat = 0 
     @State private var verticalOffset: CGFloat = 0
@@ -58,7 +59,8 @@ struct SwipeableCardStack: View {
                 antonyms: currentCard.antonyms,
                 collocations: currentCard.collocations,
                 isFlipped: currentCard.isFlipped,
-                onTap: onTap
+                onTap: onTap,
+                onPlayAudio: onPlayAudio
             )
             .offset(x: offset, y: verticalOffset)
             .rotationEffect(.degrees(Double(offset) / 20))
@@ -161,7 +163,8 @@ struct SwipeableCardStack: View {
             antonyms: data.antonyms,
             collocations: data.collocations,
             isFlipped: data.isFlipped,
-            onTap: {}
+            onTap: {},
+            onPlayAudio: {}
         )
         .allowsHitTesting(false)
     }
@@ -233,7 +236,8 @@ struct FlashcardCardData {
             onSwipeLeft: {},
             onSwipeRight: {},
             onTap: {},
-            onSwipeUp: {}
+            onSwipeUp: {},
+            onPlayAudio: { print("Play audio") }
         )
         .padding()
     }

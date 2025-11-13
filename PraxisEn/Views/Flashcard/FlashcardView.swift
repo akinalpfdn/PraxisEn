@@ -15,6 +15,7 @@ struct FlashcardView: View {
     let collocations: [String]
     let isFlipped: Bool
     let onTap: () -> Void
+    let onPlayAudio: () -> Void
 
     // MARK: - Body
 
@@ -41,7 +42,8 @@ struct FlashcardView: View {
                 word: word,
                 level: level,
                 photo: photo,
-                isLoadingPhoto: isLoadingPhoto
+                isLoadingPhoto: isLoadingPhoto,
+                onPlayAudio: onPlayAudio
             )
             .opacity(isFlipped ? 0 : 1)
             .rotation3DEffect(
@@ -74,7 +76,8 @@ struct FlashcardView: View {
             antonyms: ["keep", "support"],
             collocations: ["abandon hope", "abandon ship"],
             isFlipped: false,
-            onTap: {}
+            onTap: {},
+            onPlayAudio: { print("Play audio") }
         )
 
         // Back side
@@ -90,7 +93,8 @@ struct FlashcardView: View {
             antonyms: [],
             collocations: [],
             isFlipped: true,
-            onTap: {}
+            onTap: {},
+            onPlayAudio: { print("Play audio") }
         )
     }
     .padding()
