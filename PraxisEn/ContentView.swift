@@ -8,23 +8,46 @@
 import SwiftUI
 import SwiftData
 
+enum NavigationDestination: Hashable {
+    case stats
+    case learnedWords
+    case settings
+}
+
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel: FlashcardViewModel?
+    @State private var navigationPath: [NavigationDestination] = []
 
     var body: some View {
-        ZStack {
-            // Background
-            Color.creamBackground
-                .ignoresSafeArea()
+        NavigationStack(path: $navigationPath) {
+            ZStack {
+                // Background
+                Color.creamBackground
+                    .ignoresSafeArea()
 
-            if let viewModel = viewModel {
-                FlashcardContentView(viewModel: viewModel)
-            } else {
-                // Initializing ViewModel
-                ProgressView("Initializing...")
-                    .font(AppTypography.bodyText)
-                    .foregroundColor(.textSecondary)
+                if let viewModel = viewModel {
+                    FlashcardContentView(
+                        viewModel: viewModel,
+                        navigationPath: $navigationPath
+                    )
+                } else {
+                    // Initializing ViewModel
+                    ProgressView("Initializing...")
+                        .font(AppTypography.bodyText)
+                        .foregroundColor(.textSecondary)
+                }
+            }
+            .navigationDestination(for: NavigationDestination.self) { destination in
+                switch destination {
+                case .stats:
+                    StatsView()
+                case .learnedWords:
+                    LearnedWordsView()
+                case .settings:
+                    Text("Settings - Coming Soon")
+                        .navigationTitle("Settings")
+                }
             }
         }
         .task {
@@ -43,6 +66,7 @@ struct ContentView: View {
 
 struct FlashcardContentView: View {
     @ObservedObject var viewModel: FlashcardViewModel
+    @Binding var navigationPath: [NavigationDestination]
     @State private var showMenuDropdown = false
 
     var body: some View {
@@ -187,21 +211,21 @@ struct FlashcardContentView: View {
                 VStack(spacing: 0) {
                     MenuButton(icon: "chart.bar.fill", title: "Stats") {
                         showMenuDropdown = false
-                        // TODO: Navigate
+                        navigationPath.append(.stats)
                     }
 
                     Divider()
 
                     MenuButton(icon: "checkmark.circle.fill", title: "Learned Words") {
                         showMenuDropdown = false
-                        // TODO: Navigate
+                        navigationPath.append(.learnedWords)
                     }
 
                     Divider()
 
                     MenuButton(icon: "gearshape.fill", title: "Settings") {
                         showMenuDropdown = false
-                        // TODO: Navigate
+                        navigationPath.append(.settings)
                     }
                 }
                 .background(Color.white)

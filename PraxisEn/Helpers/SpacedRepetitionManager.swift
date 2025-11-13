@@ -41,9 +41,9 @@ class SpacedRepetitionManager {
     private static func shouldSelectNewWord(stats: ReviewStats) -> Bool {
         let inReview = stats.wordsInReview
 
-        if inReview < 50 {
+        if inReview < 10 {
             return Double.random(in: 0...1) < 0.7  // %70 yeni
-        } else if inReview < 100 {
+        } else if inReview < 15 {
             return Double.random(in: 0...1) < 0.3  // %30 yeni
         } else {
             return false  // %0 yeni (sadece tekrar)
