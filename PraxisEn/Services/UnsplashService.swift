@@ -2,12 +2,12 @@ import Foundation
 import UIKit
 
 /// Service for fetching images from Unsplash API
-actor UnsplashService {
+ actor UnsplashService {
     // MARK: - Singleton
 
     static let shared = UnsplashService()
 
-    private init() {}
+    public init() {}
 
     // MARK: - Models
 

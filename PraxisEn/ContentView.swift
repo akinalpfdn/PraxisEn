@@ -12,6 +12,7 @@ enum NavigationDestination: Hashable {
     case stats
     case learnedWords
     case settings
+    case learnedFlashcard(wordID: String, allLearnedWordIDs: [String])
 }
 
 struct ContentView: View {
@@ -47,6 +48,13 @@ struct ContentView: View {
                 case .settings:
                     Text("Settings - Coming Soon")
                         .navigationTitle("Settings")
+                case .learnedFlashcard(let wordID, let allLearnedWordIDs):
+                    let vm = LearnedFlashcardViewModel(
+                        modelContext: modelContext,
+                        wordID: wordID,
+                        allLearnedWordIDs: allLearnedWordIDs
+                    )
+                    LearnedFlashcardView(viewModel: vm)
                 }
             }
         }
@@ -59,6 +67,7 @@ struct ContentView: View {
             await vm.loadNextWord()
             await vm.updateKnownWordsCount()
         }
+
     }
 }
 

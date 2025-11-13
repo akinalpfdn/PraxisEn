@@ -26,9 +26,12 @@ struct LearnedWordsView: View {
             } else {
                 List {
                     ForEach(filteredWords, id: \.word) { word in
-                        WordRow(word: word) {
-                            resetWord(word)
+                        NavigationLink(value: NavigationDestination.learnedFlashcard(wordID: word.word, allLearnedWordIDs: learnedWords.map { $0.word })) {
+                            WordRow(word: word) {
+                                resetWord(word)
+                            }
                         }
+                        .buttonStyle(.plain)
                     }
                 }
                 .searchable(text: $searchText, prompt: "Search learned words")
