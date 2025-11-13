@@ -43,11 +43,13 @@ struct ContentView: View {
 
 struct FlashcardContentView: View {
     @ObservedObject var viewModel: FlashcardViewModel
+    @State private var showMenuDropdown = false
 
     var body: some View {
         VStack(spacing: AppSpacing.lg) {
             // Header
             headerView
+                .zIndex(1.0)
 
            
 
@@ -174,6 +176,42 @@ struct FlashcardContentView: View {
             Image(systemName: "person.circle.fill")
                 .font(.system(size: 32))
                 .foregroundColor(.accentOrange)
+                .onTapGesture {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        showMenuDropdown.toggle()
+                    }
+                }
+        }
+        .overlay(alignment: .topTrailing) {
+            if showMenuDropdown {
+                VStack(spacing: 0) {
+                    MenuButton(icon: "chart.bar.fill", title: "Stats") {
+                        showMenuDropdown = false
+                        // TODO: Navigate
+                    }
+
+                    Divider()
+
+                    MenuButton(icon: "checkmark.circle.fill", title: "Learned Words") {
+                        showMenuDropdown = false
+                        // TODO: Navigate
+                    }
+
+                    Divider()
+
+                    MenuButton(icon: "gearshape.fill", title: "Settings") {
+                        showMenuDropdown = false
+                        // TODO: Navigate
+                    }
+                }
+                .background(Color.white)
+                .cornerRadius(12)
+                .shadow(color: .black.opacity(0.15), radius: 10)
+                .padding(.top, 50)
+                .padding(.trailing, 10)
+                .transition(.scale.combined(with: .opacity))
+                .zIndex(100)
+            }
         }
     }
 
@@ -269,4 +307,30 @@ extension ModelContainer {
 #Preview {
     ContentView()
         .modelContainer(ModelContainer.preview)
+}
+
+struct MenuButton: View {
+    let icon: String
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 18))
+                    .foregroundColor(.accentOrange)
+                    .frame(width: 24)
+
+                Text(title)
+                    .font(.system(size: 16))
+                    .foregroundColor(.textPrimary)
+
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+        .frame(minWidth: 200)
+    }
 }
