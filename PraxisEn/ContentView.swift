@@ -122,15 +122,21 @@ struct FlashcardContentView: View {
                     .font(AppTypography.bodyText)
                     .foregroundColor(.textSecondary)
             }
-// Bottom hint
+
+            // Success animation overlay
+            if viewModel.showProgressAnimation {
+                SuccessAnimationView()
+                    .transition(.opacity)
+            }
+
+            // Bottom hint
             hintView
-            //Spacer()
 
             // Progress bar
             ProgressBarView(
                 current: viewModel.knownWordsCount,
                 total: viewModel.totalWordsCount,
-                showAnimation: viewModel.showProgressAnimation
+                showAnimation: false  // We show animation separately now
             )
             .padding(.bottom, AppSpacing.md)
 
