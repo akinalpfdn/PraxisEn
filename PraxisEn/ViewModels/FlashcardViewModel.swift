@@ -311,7 +311,7 @@ class FlashcardViewModel: ObservableObject {
         // Show success animation (non-blocking, runs in parallel with word transition)
         showProgressAnimation = true
         Task {
-            try? await Task.sleep(nanoseconds: 700_000_000) // 0.7 sec
+            try? await Task.sleep(nanoseconds: 1_400_000_000) // 1.4 sec (2x duration)
             await MainActor.run {
                 showProgressAnimation = false
             }

@@ -37,20 +37,20 @@ struct SuccessAnimationView: View {
             }
         }
         .onAppear {
-            // Main animation
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.5)) {
+            // Main animation (2x duration)
+            withAnimation(.spring(response: 1.2, dampingFraction: 0.5)) {
                 scale = 1.2
                 opacity = 1
                 rotation = 0
             }
 
-            // Bounce back
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.6).delay(0.2)) {
+            // Bounce back (2x delay and duration)
+            withAnimation(.spring(response: 0.8, dampingFraction: 0.6).delay(0.4)) {
                 scale = 1.0
             }
 
-            // Fade out
-            withAnimation(.easeOut(duration: 0.3).delay(0.4)) {
+            // Fade out (2x duration and delay)
+            withAnimation(.easeOut(duration: 0.6).delay(0.8)) {
                 opacity = 0
             }
 
@@ -85,9 +85,9 @@ struct SuccessAnimationView: View {
 
             particles.append(particle)
 
-            // Animate particle
+            // Animate particle (2x duration and delay range)
             let index = particles.count - 1
-            withAnimation(.easeOut(duration: 0.8).delay(Double.random(in: 0...0.1))) {
+            withAnimation(.easeOut(duration: 1.6).delay(Double.random(in: 0...0.2))) {
                 particles[index].x = cos(angle) * distance
                 particles[index].y = sin(angle) * distance
                 particles[index].opacity = 0

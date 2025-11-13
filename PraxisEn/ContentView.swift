@@ -123,12 +123,6 @@ struct FlashcardContentView: View {
                     .foregroundColor(.textSecondary)
             }
 
-            // Success animation overlay
-            if viewModel.showProgressAnimation {
-                SuccessAnimationView()
-                    .transition(.opacity)
-            }
-
             // Bottom hint
             hintView
 
@@ -140,9 +134,21 @@ struct FlashcardContentView: View {
             )
             .padding(.bottom, AppSpacing.md)
 
-            
+
         }
         .padding(AppSpacing.lg)
+        .overlay(
+            GeometryReader { geometry in
+                if viewModel.showProgressAnimation {
+                    SuccessAnimationView()
+                        .position(
+                            x: geometry.size.width / 2,
+                            y: geometry.size.height * 0.8  // 60% down from top
+                        )
+                        .transition(.opacity)
+                }
+            }
+        )
     }
 
     // MARK: - Subviews

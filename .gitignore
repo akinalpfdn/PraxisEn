@@ -144,3 +144,6 @@ htmlcov/
 *.tmp
 *.temp
 .cache/
+.audio_output/
+audio_output/
+PraxisEn/audio_output/
