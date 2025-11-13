@@ -115,7 +115,7 @@ struct FlashcardBackView: View {
                                 .foregroundColor(.textSecondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                            ForEach(examples.prefix(3), id: \.id) { example in
+                            ForEach(examples.prefix(10), id: \.id) { example in
                                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
                                     Text(example.englishText)
                                         .font(AppTypography.example)

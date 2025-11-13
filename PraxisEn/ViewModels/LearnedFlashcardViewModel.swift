@@ -134,7 +134,7 @@ class LearnedFlashcardViewModel: ObservableObject {
         // Let's look at DatabaseManager.swift again. It has `searchSentences(containing:limit:)`.
         // I will use that.
         do {
-            self.exampleSentences = try await databaseManager.searchSentences(containing: word, limit: 3)
+            self.exampleSentences = try await databaseManager.searchSentences(containing: word, limit: 10)
         } catch {
             self.exampleSentences = []
             print("Failed to fetch sentences for \(word): \(error)")

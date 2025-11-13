@@ -229,11 +229,11 @@ class DatabaseManager {
         }
         defer { sqlite3_close(db) }
 
-        // Use LIKE with COLLATE NOCASE for case-insensitive search
+        // Search only in English text (fetch more results, will filter in Swift)
         let query = """
             SELECT turkish_id, turkish_text, english_id, english_text, difficulty_level
             FROM sentences
-            WHERE turkish_text LIKE ? COLLATE NOCASE OR english_text LIKE ? COLLATE NOCASE
+            WHERE english_text LIKE ? COLLATE NOCASE
             LIMIT ?
         """
 
@@ -246,12 +246,11 @@ class DatabaseManager {
         let searchPattern = "%\(word)%"
         let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
         sqlite3_bind_text(statement, 1, (searchPattern as NSString).utf8String, -1, SQLITE_TRANSIENT)
-        sqlite3_bind_text(statement, 2, (searchPattern as NSString).utf8String, -1, SQLITE_TRANSIENT)
-        sqlite3_bind_int(statement, 3, Int32(limit))
+        sqlite3_bind_int(statement, 2, Int32(limit * 5)) // Fetch more for filtering
 
-        print("🔎 Searching with pattern: '\(searchPattern)' limit: \(limit)")
+        print("🔎 Searching English text with pattern: '\(searchPattern)'")
 
-        var results: [SentencePair] = []
+        var allResults: [SentencePair] = []
 
         while sqlite3_step(statement) == SQLITE_ROW {
             let turkishId = Int(sqlite3_column_int(statement, 0))
@@ -260,7 +259,7 @@ class DatabaseManager {
             let englishText = String(cString: sqlite3_column_text(statement, 3))
             let difficultyLevel = String(cString: sqlite3_column_text(statement, 4))
 
-            results.append(SentencePair(
+            allResults.append(SentencePair(
                 turkishId: turkishId,
                 turkishText: turkishText,
                 englishId: englishId,
@@ -269,8 +268,17 @@ class DatabaseManager {
             ))
         }
 
-        print("✅ Found \(results.count) sentences in database")
-        return results
+        print("📥 SQL returned \(allResults.count) sentences, filtering for whole word matches...")
+
+        // Filter for whole word matches using Swift regex
+        let wordPattern = try! NSRegularExpression(pattern: "\\b\(NSRegularExpression.escapedPattern(for: word))\\b", options: .caseInsensitive)
+        let results = allResults.filter { sentence in
+            let range = NSRange(sentence.englishText.startIndex..., in: sentence.englishText)
+            return wordPattern.firstMatch(in: sentence.englishText, range: range) != nil
+        }.prefix(limit)
+
+        print("✅ Found \(results.count) whole-word matches for '\(word)'")
+        return Array(results)
     }
 
     /// Gets random sentences for practice

@@ -218,7 +218,7 @@ class FlashcardViewModel: ObservableObject {
         print("📸 Photo loaded and set: \(word.word)")
     }
 
-    /// Load example sentences for current word (max 3)
+    /// Load example sentences for current word (max 10)
     private func loadExamplesForCurrentWord() async {
         guard let word = currentWord else { return }
 
@@ -228,7 +228,7 @@ class FlashcardViewModel: ObservableObject {
             // Search for sentences containing the word
             let sentences = try await DatabaseManager.shared.searchSentences(
                 containing: word.word,
-                limit: 50
+                limit: 10
             )
 
             print("📥 SQL returned \(sentences.count) sentences")
@@ -237,7 +237,7 @@ class FlashcardViewModel: ObservableObject {
             let filtered = sentences
                 .filter { $0.englishText.lowercased().contains(word.word.lowercased()) }
                 .sorted { $0.difficultyTier < $1.difficultyTier } // Easier first
-                .prefix(3)
+                .prefix(10)
 
             exampleSentences = Array(filtered)
 
