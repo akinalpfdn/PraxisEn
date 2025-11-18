@@ -146,9 +146,7 @@ struct FlashcardContentView: View {
                         viewModel.toggleFlip()
                     },
                     onSwipeUp: {
-                        Task {
-                            await viewModel.markCurrentWordAsKnown()
-                        }
+                        viewModel.showTranslationInputField()
                     },
                     onPlayAudio: {
                         viewModel.playWordAudio()
@@ -175,6 +173,37 @@ struct FlashcardContentView: View {
 
         }
         .padding(AppSpacing.lg)
+        .overlay(
+            // Translation Input Modal (full-screen overlay)
+            Group {
+                if viewModel.showTranslationInput {
+                    TranslationInputOverlay(
+                        userInput: $viewModel.userTranslationInput,
+                        validationState: viewModel.translationValidationState,
+                        validationResult: viewModel.translationValidationResult,
+                        onSubmit: {
+                            Task {
+                                await viewModel.submitTranslation()
+                            }
+                        },
+                        onClear: {
+                            viewModel.clearTranslationInput()
+                        },
+                        onHide: {
+                            viewModel.hideTranslationInputField()
+                        },
+                        userStartedTyping: {
+                            viewModel.userStartedTypingTranslation()
+                        }
+                    )
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.8).combined(with: .opacity),
+                        removal: .scale(scale: 0.9).combined(with: .opacity)
+                    ))
+                    .zIndex(1000)
+                }
+            }
+        )
         .overlay(
             GeometryReader { geometry in
                 if viewModel.showProgressAnimation {

@@ -49,6 +49,20 @@ class FlashcardViewModel: ObservableObject {
     /// Show progress animation (+1 popup)
     @Published var showProgressAnimation: Bool = false
 
+    // MARK: - Translation Input Properties
+
+    /// Whether the translation input field should be shown
+    @Published var showTranslationInput: Bool = false
+
+    /// User's translation input
+    @Published var userTranslationInput: String = ""
+
+    /// Current validation state
+    @Published var translationValidationState: ValidationState = .none
+
+    /// Result of the last translation validation
+    @Published var translationValidationResult: ValidationResult?
+
     // MARK: - Dependencies
 
     private let modelContext: ModelContext
@@ -377,6 +391,12 @@ class FlashcardViewModel: ObservableObject {
         previousWordPreview = nil
         nextWordPreviewPhoto = nil
         previousWordPreviewPhoto = nil
+
+        // Reset translation input state
+        showTranslationInput = false
+        userTranslationInput = ""
+        translationValidationState = .none
+        translationValidationResult = nil
     }
 
     // MARK: - Audio Playback
@@ -445,6 +465,91 @@ class FlashcardViewModel: ObservableObject {
         }
         if nextWordPreview == nil {
             nextWordPreviewPhoto = nil
+        }
+    }
+
+    // MARK: - Translation Input Methods
+
+    /// Shows the translation input field
+    func showTranslationInputField() {
+        showTranslationInput = true
+        translationValidationState = .typing
+        userTranslationInput = ""
+        translationValidationResult = nil
+    }
+
+    /// Hides the translation input field
+    func hideTranslationInputField() {
+        showTranslationInput = false
+        translationValidationState = .none
+        userTranslationInput = ""
+        translationValidationResult = nil
+    }
+
+    /// Validates and submits the user's translation
+    func submitTranslation() async {
+        guard let word = currentWord else { return }
+
+        let trimmedInput = userTranslationInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedInput.isEmpty else { return }
+
+        // Start validation
+        translationValidationState = .validating
+
+        // Small delay to show loading state
+        try? await Task.sleep(nanoseconds: 200_000_000) // 0.2 seconds
+
+        // Validate translation
+        let result = TranslationValidator.validate(
+            userInput: trimmedInput,
+            correctTranslation: word.turkishTranslation
+        )
+
+        translationValidationResult = result
+
+        if result.isCorrect {
+            await handleCorrectTranslation()
+        } else {
+            await handleIncorrectTranslation()
+        }
+    }
+
+    /// Handles a correct translation
+    private func handleCorrectTranslation() async {
+        translationValidationState = .correct
+
+        // Wait a moment to show success message
+        try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+
+        // Mark word as known and go to next word
+        await markCurrentWordAsKnown()
+        hideTranslationInputField()
+    }
+
+    /// Handles an incorrect translation
+    private func handleIncorrectTranslation() async {
+        translationValidationState = .incorrect
+
+        // Wait a moment to show error message
+        try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+
+        // Flip card to show correct answer
+        isFlipped = true
+        hideTranslationInputField()
+    }
+
+    /// Clears the translation input field
+    func clearTranslationInput() {
+        userTranslationInput = ""
+        translationValidationState = .typing
+        translationValidationResult = nil
+    }
+
+    /// Updates validation state when user starts typing
+    func userStartedTypingTranslation() {
+        if translationValidationState == .none || translationValidationState == .incorrect {
+            translationValidationState = .typing
+            translationValidationResult = nil
         }
     }
 }

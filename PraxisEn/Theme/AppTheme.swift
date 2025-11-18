@@ -76,6 +76,7 @@ struct AppCornerRadius {
     static let large: CGFloat = 16
     static let xlarge: CGFloat = 24
     static let card: CGFloat = 20
+    static let button: CGFloat = 20
 }
 
 // MARK: - Shadows
