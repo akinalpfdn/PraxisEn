@@ -26,14 +26,12 @@ class SpacedRepetitionManager {
         let allWords = (try? context.fetch(descriptor)) ?? []
 
         let known = allWords.filter { $0.isKnown }.count
-        let inReview = allWords.filter { !$0.isKnown && $0.repetitions > 0 }.count
-        let dueForReview = allWords.filter { !$0.isKnown && $0.isDueForReview }.count
+        let inReview = allWords.filter { $0.isInReviewSystem }.count
 
         return ReviewStats(
             totalWords: allWords.count,
             knownWords: known,
-            wordsInReview: inReview,
-            wordsDueForReview: dueForReview
+            wordsInReview: inReview
         )
     }
 
@@ -41,12 +39,14 @@ class SpacedRepetitionManager {
     private static func shouldSelectNewWord(stats: ReviewStats) -> Bool {
         let inReview = stats.wordsInReview
 
-        if inReview < 10 {
-            return Double.random(in: 0...1) < 0.7  // %70 yeni
-        } else if inReview < 15 {
-            return Double.random(in: 0...1) < 0.3  // %30 yeni
+        if inReview <= 10 {
+            return Double.random(in: 0...1) < 1.0  // 100% yeni (0-10 arası: 100-0)
+        } else if inReview <= 20 {
+            return Double.random(in: 0...1) < 0.7  // 70% yeni (11-20 arası: 70-30)
+        } else if inReview <= 50 {
+            return Double.random(in: 0...1) < 0.3  // 30% yeni (21-50 arası: 30-70)
         } else {
-            return false  // %0 yeni (sadece tekrar)
+            return false  // 0% yeni (50+): sadece tekrar
         }
     }
 
@@ -76,21 +76,62 @@ class SpacedRepetitionManager {
         excluding recentWords: [VocabularyWord]
     ) async -> VocabularyWord? {
 
+        let reviewWords = await getReviewWordsGroupedByRepetition(from: context)
+        let recentIDs = Set(recentWords.map { $0.word })
+
+        // Find the lowest repetition group that has available words
+        for (_, words) in reviewWords.sorted(by: { $0.key < $1.key }) {
+            let available = words.filter { !recentIDs.contains($0.word) }
+
+            if !available.isEmpty {
+                // Use time-based preference: sort by last reviewed date (oldest first)
+                let sortedByTime = available.sorted { word1, word2 in
+                    switch (word1.lastReviewedDate, word2.lastReviewedDate) {
+                    case (nil, _): return true  // Never reviewed words come first
+                    case (_, nil): return false
+                    case (let date1?, let date2?): return date1 < date2
+                    }
+                }
+
+                // Return the oldest word, but add some randomness
+                if sortedByTime.count > 3 && Double.random(in: 0...1) < 0.7 {
+                    // 70% chance to pick from the oldest 25%
+                    let topQuartileCount = max(1, sortedByTime.count / 4)
+                    return sortedByTime.prefix(topQuartileCount).randomElement()
+                } else {
+                    // 30% chance to pick randomly from all available
+                    return available.randomElement()
+                }
+            }
+        }
+
+        return nil
+    }
+
+    /// Get review words grouped by repetition count
+    private static func getReviewWordsGroupedByRepetition(
+        from context: ModelContext
+    ) async -> [Int: [VocabularyWord]] {
+
         var descriptor = FetchDescriptor<VocabularyWord>(
             predicate: #Predicate { word in
                 !word.isKnown && word.repetitions > 0
-            },
-            sortBy: [SortDescriptor(\.nextReviewDate)]
+            }
         )
-        descriptor.fetchLimit = 50
+        descriptor.fetchLimit = 200
 
         let reviewWords = (try? context.fetch(descriptor)) ?? []
-        let recentIDs = Set(recentWords.map { $0.word })
-        let available = reviewWords.filter { !recentIDs.contains($0.word) }
+        var grouped: [Int: [VocabularyWord]] = [:]
 
-        // Vadesi geçmiş olanları önceliklendir
-        let overdue = available.filter { $0.isDueForReview }
-        return overdue.first ?? available.randomElement()
+        for word in reviewWords {
+            let repetition = word.repetitions
+            if grouped[repetition] == nil {
+                grouped[repetition] = []
+            }
+            grouped[repetition]?.append(word)
+        }
+
+        return grouped
     }
 }
 
@@ -98,5 +139,4 @@ struct ReviewStats {
     let totalWords: Int
     let knownWords: Int
     let wordsInReview: Int
-    let wordsDueForReview: Int
 }

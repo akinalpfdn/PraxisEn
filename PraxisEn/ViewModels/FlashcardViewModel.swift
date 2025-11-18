@@ -123,9 +123,9 @@ class FlashcardViewModel: ObservableObject {
 
     /// Go to next word (swipe right)
     func nextWord() async {
-        // Schedule current word for review
+        // Increment repetition count for current word
         if let word = currentWord, !word.isKnown {
-            word.scheduleNextReview()
+            word.incrementRepetition()
             try? modelContext.save()
         }
 
@@ -158,9 +158,9 @@ class FlashcardViewModel: ObservableObject {
 
     /// Go to previous word (swipe left)
     func previousWord() async {
-        // Schedule current word for review
+        // Increment repetition count for current word
         if let word = currentWord, !word.isKnown {
-            word.scheduleNextReview()
+            word.incrementRepetition()
             try? modelContext.save()
         }
 
@@ -319,7 +319,7 @@ class FlashcardViewModel: ObservableObject {
 
         // No need to sleep here - DispatchQueue.main.asyncAfter already waited 0.3s!
         // Go to next word - EXACTLY like swipe left!
-        // (scheduleNextReview will be skipped automatically since word.isKnown = true)
+        // (incrementRepetition will be skipped automatically since word.isKnown = true)
         await nextWord()
     }
 

@@ -46,7 +46,7 @@ final class VocabularyWord {
     /// Number of times the user has reviewed this word
     var reviewCount: Int
 
-    /// Last date the word was reviewed
+    /// Last date the word was reviewed (kept for historical purposes)
     var lastReviewedDate: Date?
 
     /// Date when the word was added to the database
@@ -57,9 +57,7 @@ final class VocabularyWord {
     /// User marked this word as "I know this"
     var isKnown: Bool = false
 
-    /// When to show this word next for review
-    var nextReviewDate: Date?
-
+    
     /// Consecutive successful reviews
     var repetitions: Int = 0
 
@@ -113,10 +111,9 @@ final class VocabularyWord {
         }
     }
 
-    /// Returns true if word is due for review today
-    var isDueForReview: Bool {
-        guard let reviewDate = nextReviewDate else { return true }
-        return reviewDate <= Date()
+    /// Returns true if the word is in the review system (has been seen at least once)
+    var isInReviewSystem: Bool {
+        repetitions > 0 && !isKnown
     }
 
     // MARK: - Initialization
@@ -171,37 +168,28 @@ final class VocabularyWord {
         isLearned = false
         reviewCount = 0
         lastReviewedDate = nil
+        repetitions = 0
+        isKnown = false
     }
 
     // MARK: - Spaced Repetition Methods
 
-    /// Schedule next review based on repetition count
-    func scheduleNextReview() {
-        // Interval table: [1, 3, 7, 14, 30] days
-        let intervals = [1, 2, 3, 4, 5]
-        let dayInterval = repetitions < intervals.count
-            ? intervals[repetitions]
-            : 6
-
-        nextReviewDate = Calendar.current.date(
-            byAdding: .day,
-            value: dayInterval,
-            to: Date()
-        )
+    /// Increment repetition count when word is reviewed
+    func incrementRepetition() {
         repetitions += 1
+        markAsReviewed()
     }
 
     /// Mark word as known (exclude from rotation)
     func markAsKnown() {
         isKnown = true
-        nextReviewDate = nil
+        repetitions = 0  // Reset to remove from review groups
     }
 
     /// Reset known status (return to unknown)
     func resetKnownStatus() {
         isKnown = false
         repetitions = 0
-        nextReviewDate = Date()
     }
 }
 

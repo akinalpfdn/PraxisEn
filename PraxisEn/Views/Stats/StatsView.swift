@@ -23,13 +23,7 @@ struct StatsView: View {
                         color: .accentOrange
                     )
 
-                    StatCard(
-                        title: "Due Today",
-                        value: "\(stats.wordsDueForReview)",
-                        icon: "clock.fill",
-                        color: .info
-                    )
-
+                    
                     StatCard(
                         title: "Total Words",
                         value: "\(stats.totalWords)",

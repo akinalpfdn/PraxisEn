@@ -39,41 +39,41 @@ import UIKit
 
     /// Fetch photo for a word
     func fetchPhoto(for word: String) async throws -> UIImage {
-        print("🔍 [UnsplashService] Starting fetch for word: '\(word)'")
+        //print("🔍 [UnsplashService] Starting fetch for word: '\(word)'")
 
         // Check cache first
         if let cachedImage = await ImageCache.shared.get(word) {
-            print("📷 [UnsplashService] Using cached image for: \(word)")
-            print("📷 [UnsplashService] Cached image size: \(cachedImage.size), scale: \(cachedImage.scale)")
+         //   print("📷 [UnsplashService] Using cached image for: \(word)")
+           // print("📷 [UnsplashService] Cached image size: \(cachedImage.size), scale: \(cachedImage.scale)")
             return cachedImage
         }
 
         // Validate configuration
-        print("🔑 [UnsplashService] Checking API configuration...")
+       // print("🔑 [UnsplashService] Checking API configuration...")
         guard Config.isUnsplashConfigured else {
             print("❌ [UnsplashService] API key not configured!")
             throw UnsplashError.apiKeyNotConfigured
         }
-        print("✅ [UnsplashService] API key is configured")
+        //print("✅ [UnsplashService] API key is configured")
 
         // Build URL
         guard let url = buildSearchURL(for: word) else {
             print("❌ [UnsplashService] Failed to build URL")
             throw UnsplashError.invalidURL
         }
-        print("🌐 [UnsplashService] Search URL: \(url.absoluteString)")
+        //print("🌐 [UnsplashService] Search URL: \(url.absoluteString)")
 
         // Create request
         var request = URLRequest(url: url)
         request.addValue("Client-ID \(Config.unsplashAccessKey)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = 10
 
-        print("📡 [UnsplashService] Sending API request...")
+       // print("📡 [UnsplashService] Sending API request...")
 
         // Fetch data
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        print("📥 [UnsplashService] Received response, data size: \(data.count) bytes")
+       // print("📥 [UnsplashService] Received response, data size: \(data.count) bytes")
 
         // Validate response
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -81,7 +81,7 @@ import UIKit
             throw UnsplashError.invalidResponse
         }
 
-        print("📊 [UnsplashService] HTTP Status: \(httpResponse.statusCode)")
+       // print("📊 [UnsplashService] HTTP Status: \(httpResponse.statusCode)")
 
         guard httpResponse.statusCode == 200 else {
             print("❌ [UnsplashService] HTTP error code: \(httpResponse.statusCode)")
@@ -89,34 +89,34 @@ import UIKit
         }
 
         // Parse JSON
-        print("🔄 [UnsplashService] Parsing JSON response...")
+       // print("🔄 [UnsplashService] Parsing JSON response...")
         let searchResponse = try JSONDecoder().decode(SearchResponse.self, from: data)
-        print("📋 [UnsplashService] Found \(searchResponse.results.count) photos")
+       // print("📋 [UnsplashService] Found \(searchResponse.results.count) photos")
 
         guard let firstPhoto = searchResponse.results.first else {
             print("❌ [UnsplashService] No photos in results")
             throw UnsplashError.noPhotosFound
         }
 
-        print("🖼️  [UnsplashService] Selected photo ID: \(firstPhoto.id)")
-        print("🔗 [UnsplashService] Image URL: \(firstPhoto.urls.regular)")
+      //  print("🖼️  [UnsplashService] Selected photo ID: \(firstPhoto.id)")
+      //  print("🔗 [UnsplashService] Image URL: \(firstPhoto.urls.regular)")
 
         // Download image
         let imageURL = URL(string: firstPhoto.urls.regular)!
-        print("⬇️  [UnsplashService] Downloading image from URL...")
+       // print("⬇️  [UnsplashService] Downloading image from URL...")
         let (imageData, _) = try await URLSession.shared.data(from: imageURL)
-        print("📥 [UnsplashService] Downloaded image data: \(imageData.count) bytes")
+      //  print("📥 [UnsplashService] Downloaded image data: \(imageData.count) bytes")
 
         guard let image = UIImage(data: imageData) else {
             print("❌ [UnsplashService] Failed to create UIImage from data")
             throw UnsplashError.invalidImageData
         }
 
-        print("✅ [UnsplashService] Successfully created UIImage: size=\(image.size), scale=\(image.scale)")
+      //  print("✅ [UnsplashService] Successfully created UIImage: size=\(image.size), scale=\(image.scale)")
 
         // Cache the image
         await ImageCache.shared.set(image, forKey: word)
-        print("💾 [UnsplashService] Cached image for: \(word)")
+      //  print("💾 [UnsplashService] Cached image for: \(word)")
 
         return image
     }
