@@ -33,7 +33,7 @@ struct AppTypography {
 
     /// Translation text
     static var translation: Font {
-        .system(size: 24, weight: .semibold, design: .rounded)
+        .system(size: 20, weight: .semibold, design: .rounded)
     }
 
     /// Example sentence

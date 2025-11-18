@@ -37,7 +37,7 @@ struct TranslationInputOverlay: View {
                         .shadow(color: .black.opacity(0.2), radius: 20, y: 10)
                 }
                 .frame(maxWidth: min(400, geometry.size.width - 40))
-                .frame(maxHeight: min(600, geometry.size.height - 80))
+                .frame(maxHeight: min(300, geometry.size.height - 80))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -52,9 +52,7 @@ struct TranslationInputOverlay: View {
 
     private var modalHeaderView: some View {
         HStack {
-            Spacer()
-
-            Text("Translate the Word")
+            Text("")
                 .font(AppTypography.cardTitle)
                 .foregroundColor(.textPrimary)
 
@@ -62,19 +60,20 @@ struct TranslationInputOverlay: View {
 
             // Close button
             Button(action: onHide) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 24))
+                Image(systemName: "xmark")
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.textTertiary)
+                    .frame(width: 28, height: 28)
+                    .background(Color.creamSecondary)
+                    .clipShape(Circle())
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
-        .background(Color.white)
-        .cornerRadius(AppCornerRadius.card, corners: [.topLeft, .topRight])
+        .padding(.horizontal, AppSpacing.lg)
+        .padding(.vertical, AppSpacing.md)
     }
 
     private var modalContentView: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: AppSpacing.lg) {
             // Instructions
             modalInstructionView
 
@@ -89,20 +88,15 @@ struct TranslationInputOverlay: View {
             .onChange(of: userInput) { _, _ in
                 userStartedTyping()
             }
-
-            // Action buttons
-            modalActionButtonsView
-
-            Spacer(minLength: 20)
+ 
+ 
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
+        .padding(.horizontal, AppSpacing.lg)
+        .padding(.bottom, AppSpacing.lg)
     }
 
     private var modalInstructionView: some View {
-        VStack(spacing: 12) {
-            Text("🎯")
-                .font(.system(size: 40))
+        VStack(spacing: AppSpacing.md) {
 
             Text("Enter the Turkish Translation")
                 .font(AppTypography.cardTitle)
@@ -113,29 +107,11 @@ struct TranslationInputOverlay: View {
                 .font(AppTypography.bodyText)
                 .foregroundColor(.textSecondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 10)
+                .lineLimit(nil)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, AppSpacing.md)
     }
 
-    private var modalActionButtonsView: some View {
-        VStack(spacing: 12) {
-            // Submit button (primary)
-            Button("Submit Translation") {
-                onSubmit()
-            }
-            .buttonStyle(PrimaryButtonStyle())
-            .frame(maxWidth: .infinity)
-            .disabled(userInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-
-            // Cancel button (secondary)
-            Button("Cancel") {
-                onHide()
-            }
-            .buttonStyle(SecondaryButtonStyle())
-            .frame(maxWidth: .infinity)
-        }
-    }
 }
 
 // MARK: - Corner Radius Extension

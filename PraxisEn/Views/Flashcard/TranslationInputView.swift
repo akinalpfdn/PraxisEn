@@ -54,60 +54,53 @@ struct TranslationInputView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: AppSpacing.md) {
             // Input field container
-            HStack(spacing: 12) {
-                // Text input field
-                TextField(
-                    "Enter Turkish translation...",
-                    text: $userInput,
-                    axis: .vertical
-                )
-                .focused($isFieldFocused)
-                .textFieldStyle(CustomTextFieldStyle(
-                    textColor: inputFieldColor,
-                    borderColor: borderColor
-                ))
-                .keyboardType(.default)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .submitLabel(.done)
-                .onSubmit {
-                    handleSubmit()
-                }
+            VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                 
 
-                // Clear button
-                if !userInput.isEmpty {
-                    Button(action: onClear) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.textTertiary)
-                            .font(.system(size: 20))
+                HStack(spacing: AppSpacing.sm) {
+                    // Text input field
+                    TextField(
+                        "Enter translation...",
+                        text: $userInput,
+                        axis: .vertical
+                    )
+                    .focused($isFieldFocused)
+                    .font(AppTypography.translation)
+                    .foregroundColor(inputFieldColor)
+                    .padding(.horizontal, AppSpacing.md)
+                    .padding(.vertical, AppSpacing.sm)
+                    .background(Color.creamBackground)
+                    .cornerRadius(AppCornerRadius.medium)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppCornerRadius.medium)
+                            .stroke(borderColor, lineWidth: 2)
+                    )
+                    .keyboardType(.default)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .submitLabel(.done)
+                    .onSubmit {
+                        handleSubmit()
                     }
-                    .transition(.scale.combined(with: .opacity))
-                }
 
-                // Submit button
-                Button(action: handleSubmit) {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .foregroundColor(userInput.isEmpty ? .textTertiary : .info)
-                        .font(.system(size: 24))
+                    // Submit button
+                    Button(action: handleSubmit) {
+                        Image(systemName: "arrow.right.circle.fill")
+                            .foregroundColor(userInput.isEmpty ? .textTertiary : .accentOrange)
+                            .font(.system(size: 24))
+                    }
+                    .disabled(userInput.isEmpty || validationState == .validating)
                 }
-                .disabled(userInput.isEmpty || validationState == .validating)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(Color.white)
-            .overlay(
-                RoundedRectangle(cornerRadius: AppCornerRadius.card)
-                    .stroke(borderColor, lineWidth: 2)
-            )
-            .shadow(color: .black.opacity(0.05), radius: 4, y: 2)
 
             // Validation message with animation
             if showValidationMessage {
-                HStack(spacing: 8) {
+                HStack(spacing: AppSpacing.sm) {
                     Image(systemName: validationState == .correct ? "checkmark.circle.fill" : "xmark.circle.fill")
                         .foregroundColor(validationState == .correct ? .success : .error)
+                        .font(.system(size: 18))
 
                     Text(validationMessage)
                         .font(AppTypography.bodyText)
@@ -115,7 +108,10 @@ struct TranslationInputView: View {
 
                     Spacer()
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, AppSpacing.sm)
+                .padding(.vertical, AppSpacing.sm)
+                .background(validationState == .correct ? Color.success.opacity(0.1) : Color.error.opacity(0.1))
+                .cornerRadius(AppCornerRadius.small)
                 .transition(.asymmetric(
                     insertion: .move(edge: .top).combined(with: .opacity),
                     removal: .move(edge: .top).combined(with: .opacity)
@@ -128,10 +124,10 @@ struct TranslationInputView: View {
                     Spacer()
                     ProgressView()
                         .scaleEffect(0.8)
-                        .progressViewStyle(CircularProgressViewStyle(tint: .info))
+                        .progressViewStyle(CircularProgressViewStyle(tint: .accentOrange))
                     Spacer()
                 }
-                .padding(.horizontal, 16)
+                .padding(.vertical, AppSpacing.sm)
                 .transition(.opacity)
             }
         }
