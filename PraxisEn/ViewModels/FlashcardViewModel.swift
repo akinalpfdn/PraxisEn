@@ -555,6 +555,7 @@ class FlashcardViewModel: ObservableObject {
 
         // Flip card to show correct answer
         isFlipped = true
+        hasSeenBackOfCard = true  // Mark that user has seen the answer
         hideTranslationInputField()
     }
 
