@@ -63,6 +63,9 @@ class FlashcardViewModel: ObservableObject {
     /// Result of the last translation validation
     @Published var translationValidationResult: ValidationResult?
 
+    /// Whether user has seen the back of the current card
+    private var hasSeenBackOfCard: Bool = false
+
     // MARK: - Dependencies
 
     private let modelContext: ModelContext
@@ -89,7 +92,10 @@ class FlashcardViewModel: ObservableObject {
         currentWord = word
         addToHistory(word)
 
+        // Reset state for new word
         isFlipped = false
+        hasSeenBackOfCard = false
+
         await loadPhotoForCurrentWord()
         await loadExamplesForCurrentWord()
         await updatePreviews()
@@ -122,6 +128,7 @@ class FlashcardViewModel: ObservableObject {
 
             // Reset flip state
             isFlipped = false
+            hasSeenBackOfCard = false
 
             // Load photo and examples
             await loadPhotoForCurrentWord()
@@ -163,6 +170,7 @@ class FlashcardViewModel: ObservableObject {
 
         // Reset flip and load content
         isFlipped = false
+        hasSeenBackOfCard = false
         await loadPhotoForCurrentWord()
         await loadExamplesForCurrentWord()
 
@@ -191,6 +199,7 @@ class FlashcardViewModel: ObservableObject {
 
         // Reset flip and load content
         isFlipped = false
+        hasSeenBackOfCard = false
         await loadPhotoForCurrentWord()
         await loadExamplesForCurrentWord()
 
@@ -204,6 +213,11 @@ class FlashcardViewModel: ObservableObject {
     func toggleFlip() {
         withAnimation(AppAnimation.flip) {
             isFlipped.toggle()
+
+            // Track when user sees the back of the card
+            if isFlipped {
+                hasSeenBackOfCard = true
+            }
         }
     }
 
@@ -379,6 +393,11 @@ class FlashcardViewModel: ObservableObject {
         currentIndex > 0
     }
 
+    /// Check if user has seen the back of the current card
+    func userHasSeenBackOfCard() -> Bool {
+        return hasSeenBackOfCard
+    }
+
     /// Reset the flashcard session
     func reset() {
         currentWord = nil
@@ -397,6 +416,7 @@ class FlashcardViewModel: ObservableObject {
         userTranslationInput = ""
         translationValidationState = .none
         translationValidationResult = nil
+        hasSeenBackOfCard = false
     }
 
     // MARK: - Audio Playback

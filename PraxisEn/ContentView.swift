@@ -146,7 +146,9 @@ struct FlashcardContentView: View {
                         viewModel.toggleFlip()
                     },
                     onSwipeUp: {
-                        viewModel.showTranslationInputField()
+                        Task {
+                            await handleSwipeUp()
+                        }
                     },
                     onPlayAudio: {
                         viewModel.playWordAudio()
@@ -274,6 +276,18 @@ struct FlashcardContentView: View {
                 .transition(.scale.combined(with: .opacity))
                 .zIndex(100)
             }
+        }
+    }
+
+    // MARK: - Helper Methods
+
+    private func handleSwipeUp() async {
+        if viewModel.userHasSeenBackOfCard() {
+            // User has already seen the back of this card: directly mark as known
+            await viewModel.markCurrentWordAsKnown()
+        } else {
+            // User hasn't seen the back yet: show translation input
+            viewModel.showTranslationInputField()
         }
     }
 
