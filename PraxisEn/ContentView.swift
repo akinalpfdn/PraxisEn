@@ -46,7 +46,7 @@ struct ContentView: View {
                 case .learnedWords:
                     LearnedWordsView()
                 case .settings:
-                    Text("Settings - Coming Soon")
+                    SettingsView()
                         .navigationTitle("Settings")
                 case .learnedFlashcard(let wordID, let allLearnedWordIDs):
                     let vm = LearnedFlashcardViewModel(
@@ -63,7 +63,10 @@ struct ContentView: View {
             let vm = FlashcardViewModel(modelContext: modelContext)
             viewModel = vm
 
-            // Load first word using spaced repetition
+            // Load user settings first
+            await vm.loadUserSettings()
+
+            // Load first word using spaced repetition with settings
             await vm.loadNextWord()
             await vm.updateKnownWordsCount()
         }

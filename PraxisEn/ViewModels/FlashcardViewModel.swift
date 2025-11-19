@@ -66,6 +66,9 @@ class FlashcardViewModel: ObservableObject {
     /// Whether user has seen the back of the current card
     private var hasSeenBackOfCard: Bool = false
 
+    /// User settings for learning preferences
+    @Published var userSettings: UserSettings?
+
     // MARK: - Dependencies
 
     private let modelContext: ModelContext
@@ -78,8 +81,40 @@ class FlashcardViewModel: ObservableObject {
 
     // MARK: - Word Management
 
-    /// Load next word using spaced repetition algorithm
+    /// Load next word using spaced repetition algorithm with user settings
     func loadNextWord() async {
+        if let settings = userSettings {
+            // Use settings-based selection
+            guard let word = await SpacedRepetitionManager.selectNextWordWithSettings(
+                from: modelContext,
+                excluding: Array(wordHistory.suffix(10)),
+                settings: settings
+            ) else {
+                // Handle no more words case
+                await handleNoMoreWords(settings: settings)
+                return
+            }
+
+            currentWord = word
+            addToHistory(word)
+
+            // Reset state for new word
+            isFlipped = false
+            hasSeenBackOfCard = false
+
+            await loadPhotoForCurrentWord()
+            await loadExamplesForCurrentWord()
+            await updatePreviews()
+            await updateKnownWordsCount()
+            await updateSettingsProgress(settings: settings)
+        } else {
+            // Fallback to old method for backward compatibility
+            await loadNextWordLegacy()
+        }
+    }
+
+    /// Legacy word loading method (for backward compatibility)
+    private func loadNextWordLegacy() async {
         guard let word = await SpacedRepetitionManager.selectNextWord(
             from: modelContext,
             excluding: Array(wordHistory.suffix(10))
@@ -100,6 +135,55 @@ class FlashcardViewModel: ObservableObject {
         await loadExamplesForCurrentWord()
         await updatePreviews()
         await updateKnownWordsCount()
+    }
+
+    /// Handle case when no more words are available in target levels
+    private func handleNoMoreWords(settings: UserSettings) async {
+        if settings.allLevelsCompleted {
+            print("🎉 All levels completed! No more new words available.")
+            // Could show completion UI or message
+        } else {
+            print("📚 No more words available in current level(s)")
+            // Could try to advance level or show message
+        }
+    }
+
+    /// Update user settings progress when words are marked as known
+    private func updateSettingsProgress(settings: UserSettings) async {
+        // Calculate word counts per level
+        let descriptor = FetchDescriptor<VocabularyWord>()
+        let allWords = (try? modelContext.fetch(descriptor)) ?? []
+
+        var totalWordsByLevel: [String: Int] = [:]
+        var knownWordsByLevel: [String: Int] = [:]
+
+        // Initialize counters
+        for level in ["A1", "A2", "B1", "B2"] {
+            totalWordsByLevel[level] = 0
+            knownWordsByLevel[level] = 0
+        }
+
+        // Count words by level
+        for word in allWords {
+            if let levelCount = totalWordsByLevel[word.level] {
+                totalWordsByLevel[word.level] = levelCount + 1
+            }
+
+            if word.isKnown {
+                if let knownCount = knownWordsByLevel[word.level] {
+                    knownWordsByLevel[word.level] = knownCount + 1
+                }
+            }
+        }
+
+        // Update settings with new counts
+        settings.updateWordCounts(totalWords: totalWordsByLevel, knownWords: knownWordsByLevel)
+
+        do {
+            try modelContext.save()
+        } catch {
+            print("❌ Error updating settings progress: \(error)")
+        }
     }
 
     /// Load a random word
@@ -572,6 +656,39 @@ class FlashcardViewModel: ObservableObject {
             translationValidationState = .typing
             translationValidationResult = nil
         }
+    }
+
+    // MARK: - Settings Management
+
+    /// Load user settings from database
+    func loadUserSettings() async {
+        let descriptor = FetchDescriptor<UserSettings>()
+        let settings = (try? modelContext.fetch(descriptor)) ?? []
+
+        if let firstSettings = settings.first {
+            userSettings = firstSettings
+            await updateSettingsProgress(settings: firstSettings)
+            print("✅ Loaded user settings: \(firstSettings.wordSelectionMode.displayName)")
+        } else {
+            // Create default settings if none exist
+            let defaultSettings = UserSettings()
+            modelContext.insert(defaultSettings)
+
+            do {
+                try modelContext.save()
+                userSettings = defaultSettings
+                await updateSettingsProgress(settings: defaultSettings)
+                print("✅ Created default user settings")
+            } catch {
+                print("❌ Error creating default settings: \(error)")
+            }
+        }
+    }
+
+    /// Update user settings and trigger progress recalculation
+    func updateUserSettings(_ settings: UserSettings) async {
+        userSettings = settings
+        await updateSettingsProgress(settings: settings)
     }
 }
 

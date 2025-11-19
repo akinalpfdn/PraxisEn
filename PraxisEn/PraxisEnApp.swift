@@ -16,7 +16,8 @@ struct PraxisEnApp: App {
         // Configure SwiftData schema with our models
         let schema = Schema([
             VocabularyWord.self,
-            SentencePair.self
+            SentencePair.self,
+            UserSettings.self
         ])
 
         let modelConfiguration = ModelConfiguration(

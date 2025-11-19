@@ -26,7 +26,7 @@ class SpacedRepetitionManager {
         let allWords = (try? context.fetch(descriptor)) ?? []
 
         let known = allWords.filter { $0.isKnown }.count
-        let inReview = allWords.filter { $0.isInReviewSystem }.count
+        let inReview = allWords.filter { !$0.isKnown && $0.repetitions > 0 }.count
 
         return ReviewStats(
             totalWords: allWords.count,
@@ -132,6 +132,114 @@ class SpacedRepetitionManager {
         }
 
         return grouped
+    }
+
+    /// Select next word based on user settings (new method)
+    static func selectNextWordWithSettings(
+        from context: ModelContext,
+        excluding recentWords: [VocabularyWord],
+        settings: UserSettings
+    ) async -> VocabularyWord? {
+        let stats = await getReviewStats(from: context)
+        let shouldShowNew = shouldSelectNewWord(stats: stats)
+
+        if shouldShowNew {
+            return await selectNewWordWithSettings(from: context, excluding: recentWords, settings: settings)
+        } else {
+            return await selectReviewWordWithSettings(from: context, excluding: recentWords, settings: settings)
+        }
+    }
+
+    /// Select new word based on user settings
+    private static func selectNewWordWithSettings(
+        from context: ModelContext,
+        excluding recentWords: [VocabularyWord],
+        settings: UserSettings
+    ) async -> VocabularyWord? {
+
+        let targetLevels = settings.getTargetLevels()
+        let recentIDs = Set(recentWords.map { $0.word })
+
+        for level in targetLevels {
+            var descriptor = FetchDescriptor<VocabularyWord>(
+                predicate: #Predicate { word in
+                    !word.isKnown &&
+                    word.repetitions == 0 &&
+                    word.level == level
+                }
+            )
+            descriptor.fetchLimit = 50
+
+            let levelWords = (try? context.fetch(descriptor)) ?? []
+            let available = levelWords.filter { !recentIDs.contains($0.word) }
+
+            if !available.isEmpty {
+                print("📚 Selected new word from level: \(level)")
+                return available.randomElement()
+            }
+        }
+
+        return nil
+    }
+
+    /// Select review word based on user settings
+    private static func selectReviewWordWithSettings(
+        from context: ModelContext,
+        excluding recentWords: [VocabularyWord],
+        settings: UserSettings
+    ) async -> VocabularyWord? {
+
+        let targetLevels = settings.getTargetLevels()
+        let recentIDs = Set(recentWords.map { $0.word })
+
+        // Get review words from target levels, grouped by repetition count
+        var descriptor = FetchDescriptor<VocabularyWord>(
+            predicate: #Predicate { word in
+                !word.isKnown && word.repetitions > 0 && targetLevels.contains(word.level)
+            }
+        )
+        descriptor.fetchLimit = 200
+
+        let reviewWords = (try? context.fetch(descriptor)) ?? []
+
+        // Group by repetition count (existing logic)
+        var grouped: [Int: [VocabularyWord]] = [:]
+
+        for word in reviewWords {
+            let repetition = word.repetitions
+            if grouped[repetition] == nil {
+                grouped[repetition] = []
+            }
+            grouped[repetition]?.append(word)
+        }
+
+        // Find the lowest repetition group that has available words
+        for (_, words) in grouped.sorted(by: { $0.key < $1.key }) {
+            let available = words.filter { !recentIDs.contains($0.word) }
+
+            if !available.isEmpty {
+                // Use time-based preference: sort by last reviewed date (oldest first)
+                let sortedByTime = available.sorted { word1, word2 in
+                    switch (word1.lastReviewedDate, word2.lastReviewedDate) {
+                    case (nil, _): return true  // Never reviewed words come first
+                    case (_, nil): return false
+                    case (let date1?, let date2?): return date1 < date2
+                    }
+                }
+
+                // Return the oldest word, but add some randomness
+                if sortedByTime.count > 3 && Double.random(in: 0...1) < 0.7 {
+                    // 70% chance to pick from the oldest 25%
+                    let topQuartileCount = max(1, sortedByTime.count / 4)
+                    return sortedByTime.prefix(topQuartileCount).randomElement()
+                } else {
+                    // 30% chance to pick randomly from all available
+                    return available.randomElement()
+                }
+            }
+        }
+
+        return nil
     }
 }
 
