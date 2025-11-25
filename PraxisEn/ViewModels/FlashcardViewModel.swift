@@ -83,44 +83,19 @@ class FlashcardViewModel: ObservableObject {
 
     /// Load next word using spaced repetition algorithm with user settings
     func loadNextWord() async {
-        if let settings = userSettings {
-            // Use settings-based selection
-            guard let word = await SpacedRepetitionManager.selectNextWordWithSettings(
-                from: modelContext,
-                excluding: Array(wordHistory.suffix(10)),
-                settings: settings
-            ) else {
-                // Handle no more words case
-                await handleNoMoreWords(settings: settings)
-                return
-            }
-
-            currentWord = word
-            addToHistory(word)
-
-            // Reset state for new word
-            isFlipped = false
-            hasSeenBackOfCard = false
-
-            await loadPhotoForCurrentWord()
-            await loadExamplesForCurrentWord()
-            await updatePreviews()
-            await updateKnownWordsCount()
-            await updateSettingsProgress(settings: settings)
-        } else {
-            // Fallback to old method for backward compatibility
-            await loadNextWordLegacy()
+        guard let settings = userSettings else {
+            print("❌ No user settings found - cannot load next word")
+            return
         }
-    }
 
-    /// Legacy word loading method (for backward compatibility)
-    private func loadNextWordLegacy() async {
-        guard let word = await SpacedRepetitionManager.selectNextWord(
+        // Use settings-based selection
+        guard let word = await SpacedRepetitionManager.selectNextWordWithSettings(
             from: modelContext,
-            excluding: Array(wordHistory.suffix(10))
+            excluding: Array(wordHistory.suffix(10)),
+            settings: settings
         ) else {
-            // Fallback: use old random method
-            await loadRandomWord()
+            // Handle no more words case
+            await handleNoMoreWords(settings: settings)
             return
         }
 
@@ -135,6 +110,7 @@ class FlashcardViewModel: ObservableObject {
         await loadExamplesForCurrentWord()
         await updatePreviews()
         await updateKnownWordsCount()
+        await updateSettingsProgress(settings: settings)
     }
 
     /// Handle case when no more words are available in target levels
@@ -186,46 +162,7 @@ class FlashcardViewModel: ObservableObject {
         }
     }
 
-    /// Load a random word
-    func loadRandomWord() async {
-        do {
-            // Fetch random word from database
-            let descriptor = FetchDescriptor<VocabularyWord>(
-                sortBy: [SortDescriptor(\.word)]
-            )
-
-            let allWords = try modelContext.fetch(descriptor)
-
-            guard !allWords.isEmpty else {
-                print("⚠️ No words found in database")
-                return
-            }
-
-            // Get random word
-            let randomWord = allWords.randomElement()!
-
-            // Update current word
-            currentWord = randomWord
-
-            // Add to history
-            addToHistory(randomWord)
-
-            // Reset flip state
-            isFlipped = false
-            hasSeenBackOfCard = false
-
-            // Load photo and examples
-            await loadPhotoForCurrentWord()
-            await loadExamplesForCurrentWord()
-
-            // Update previews
-            await updatePreviews()
-
-        } catch {
-            print("❌ Error loading random word: \(error)")
-        }
-    }
-
+    
     /// Go to next word (swipe right)
     func nextWord() async {
         // Increment repetition count for current word
@@ -527,15 +464,21 @@ class FlashcardViewModel: ObservableObject {
         if currentIndex < wordHistory.count - 1 {
             nextWordPreview = wordHistory[currentIndex + 1]
         } else {
-            // Load a random word as preview
-            do {
-                let descriptor = FetchDescriptor<VocabularyWord>(
-                    sortBy: [SortDescriptor(\.word)]
-                )
-                let allWords = try modelContext.fetch(descriptor)
-                nextWordPreview = allWords.randomElement()
-            } catch {
-                print("❌ Error loading next word preview: \(error)")
+            // Use spaced repetition logic to select next word preview
+            guard let settings = userSettings else {
+                print("❌ No user settings found - cannot load next word preview")
+                nextWordPreview = nil
+                return
+            }
+
+            if let nextWord = await SpacedRepetitionManager.selectNextWordWithSettings(
+                from: modelContext,
+                excluding: Array(wordHistory.suffix(10)),
+                settings: settings
+            ) {
+                nextWordPreview = nextWord
+            } else {
+                print("ℹ️ No more words available for preview")
                 nextWordPreview = nil
             }
         }

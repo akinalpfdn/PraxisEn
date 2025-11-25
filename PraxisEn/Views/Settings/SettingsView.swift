@@ -6,6 +6,7 @@ struct SettingsView: View {
     @Query private var userSettings: [UserSettings]
     @State private var settings: UserSettings?
     @State private var isLoading = true
+    @State private var showResetConfirmation = false
 
     var body: some View {
         NavigationView {
@@ -30,6 +31,14 @@ struct SettingsView: View {
             .task {
                 await loadSettings()
             }
+            .alert("Reset All Progress", isPresented: $showResetConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Reset Everything", role: .destructive) {
+                    performFullReset()
+                }
+            } message: {
+                Text("This will permanently delete all your learning progress:\n\n• Reset all word learning status\n• Clear learned words history\n• Restart from A1 in progressive mode\n\nThis action cannot be undone.")
+            }
         }
     }
 
@@ -40,8 +49,7 @@ struct SettingsView: View {
             // Learning Mode Section
             learningModeSection(settings: settings)
 
-            // Progress Section
-            progressSection(settings: settings)
+            // Removed progress section - now only in StatsView
 
             // Actions Section
             actionsSection(settings: settings)
@@ -73,24 +81,7 @@ struct SettingsView: View {
         .cardShadow()
     }
 
-    private func progressSection(settings: UserSettings) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
-            Text("Progress")
-                .font(AppTypography.cardTitle)
-                .foregroundColor(.textPrimary)
-
-            VStack(spacing: AppSpacing.md) {
-                levelProgressCard(level: "A1", settings: settings)
-                levelProgressCard(level: "A2", settings: settings)
-                levelProgressCard(level: "B1", settings: settings)
-                levelProgressCard(level: "B2", settings: settings)
-            }
-        }
-        .padding(AppSpacing.lg)
-        .background(Color.white)
-        .cornerRadius(AppCornerRadius.card)
-        .cardShadow()
-    }
+    // Progress section removed - now only in StatsView
 
     private func actionsSection(settings: UserSettings) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
@@ -103,9 +94,9 @@ struct SettingsView: View {
                     title: "Reset Progress",
                     subtitle: "Clear all learning progress and restart from A1",
                     iconName: "arrow.clockwise",
-                    color: .accentOrange
+                    color: .error
                 ) {
-                    resetProgress(settings: settings)
+                    showResetConfirmation = true
                 }
             }
         }
@@ -333,14 +324,35 @@ struct SettingsView: View {
         }
     }
 
-    private func resetProgress(settings: UserSettings) {
-        // Show confirmation alert
-        // For now, we'll implement a simple version
-        settings.resetProgress()
+    // Old resetProgress function removed - replaced with performFullReset
 
+    // MARK: - Reset Functionality
+
+    private func performFullReset() {
+        guard let settings = settings else { return }
+
+        // Reset all VocabularyWord records
         do {
+            let descriptor = FetchDescriptor<VocabularyWord>()
+            let allWords = try modelContext.fetch(descriptor)
+
+            for word in allWords {
+                word.isKnown = false
+                word.repetitions = 0
+                word.reviewCount = 0
+                word.lastReviewedDate = nil
+                word.isLearned = false
+            }
+
             try modelContext.save()
-            print("✅ Reset all learning progress")
+
+            // Reset user settings
+            settings.resetProgress()
+            try modelContext.save()
+
+            self.settings = settings
+
+            print("🔄 Successfully reset all learning progress")
         } catch {
             print("❌ Error resetting progress: \(error)")
         }

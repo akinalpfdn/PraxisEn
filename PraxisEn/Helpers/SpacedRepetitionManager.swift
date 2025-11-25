@@ -42,7 +42,7 @@ class SpacedRepetitionManager {
         if inReview <= 10 {
             return Double.random(in: 0...1) < 1.0  // 100% yeni (0-10 arası: 100-0)
         } else if inReview <= 20 {
-            return Double.random(in: 0...1) < 0.7  // 70% yeni (11-20 arası: 70-30)
+            return Double.random(in: 0...1) < 0.6  // 70% yeni (11-20 arası: 70-30)
         } else if inReview <= 50 {
             return Double.random(in: 0...1) < 0.3  // 30% yeni (21-50 arası: 30-70)
         } else {

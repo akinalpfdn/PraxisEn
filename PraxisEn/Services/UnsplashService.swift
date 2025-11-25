@@ -48,6 +48,14 @@ import UIKit
             return cachedImage
         }
 
+        // Check local images first before making API call
+        if let localImage = await LocalImageService.shared.loadLocalImage(for: word) {
+            // Cache the local image for future use
+            await ImageCache.shared.set(localImage, forKey: word)
+            print("📱 [UnsplashService] Using local image for: \(word)")
+            return localImage
+        }
+
         // Validate configuration
        // print("🔑 [UnsplashService] Checking API configuration...")
         guard Config.isUnsplashConfigured else {
@@ -167,6 +175,14 @@ enum UnsplashError: LocalizedError {
 extension UnsplashService {
     /// Fetch photo with fallback to generic image on error
     func fetchPhotoSafely(for word: String) async -> UIImage {
+        // First, try to get local image quickly
+        if let localImage = await LocalImageService.shared.loadLocalImage(for: word) {
+            print("✅ [fetchPhotoSafely] Using local image for '\(word)'")
+            // Cache the local image
+            await ImageCache.shared.set(localImage, forKey: word)
+            return localImage
+        }
+
         do {
             let image = try await fetchPhoto(for: word)
             print("✅ [fetchPhotoSafely] Successfully fetched image for '\(word)'")

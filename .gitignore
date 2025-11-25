@@ -147,6 +147,6 @@ htmlcov/
 .audio_output/
 audio_output/
 PraxisEn/audio_output/
-.word_images/
-word_images/
-PraxisEn/word_images/
+.images/
+images/
+PraxisEn/images/
