@@ -19,6 +19,7 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel: FlashcardViewModel?
     @State private var navigationPath: [NavigationDestination] = []
+    @State private var isDatabaseReady: Bool = false
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -27,14 +28,19 @@ struct ContentView: View {
                 Color.creamBackground
                     .ignoresSafeArea()
 
-                if let viewModel = viewModel {
+                if !isDatabaseReady {
+                    // Setting up database
+                    ProgressView("Initializing...")
+                        .font(AppTypography.bodyText)
+                        .foregroundColor(.textSecondary)
+                } else if let viewModel = viewModel {
                     FlashcardContentView(
                         viewModel: viewModel,
                         navigationPath: $navigationPath
                     )
                 } else {
                     // Initializing ViewModel
-                    ProgressView("Initializing...")
+                    ProgressView("Loading...")
                         .font(AppTypography.bodyText)
                         .foregroundColor(.textSecondary)
                 }
@@ -59,6 +65,18 @@ struct ContentView: View {
             }
         }
         .task {
+            // Wait for database to be ready before proceeding
+            while !DatabaseManager.shared.isDatabaseSetupComplete() {
+                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            }
+
+            // Small delay to ensure all database operations are complete
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+
+            await MainActor.run {
+                isDatabaseReady = true
+            }
+
             // Initialize ViewModel with correct context
             let vm = FlashcardViewModel(modelContext: modelContext)
             viewModel = vm

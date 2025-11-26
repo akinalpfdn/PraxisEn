@@ -43,7 +43,7 @@ struct PraxisEnApp: App {
         WindowGroup {
             ContentView()
                 .task {
-                    // Setup databases on first launch
+                    // Setup databases on first launch BEFORE any other operations
                     await setupDatabasesOnFirstLaunch()
                 }
         }
