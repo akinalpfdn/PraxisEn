@@ -28,12 +28,12 @@ actor LocalImageService {
 
         for filename in possibleNames {
             if let image = loadImageFromBundle(filename: filename) {
-                print("📷 [LocalImageService] Found local image: \(filename) for word: '\(word)'")
+                //print("📷 [LocalImageService] Found local image: \(filename) for word: '\(word)'")
                 return image
             }
         }
 
-        print("🔍 [LocalImageService] No local image found for word: '\(word)'")
+        //print("🔍 [LocalImageService] No local image found for word: '\(word)'")
         return nil
     }
 
@@ -72,7 +72,7 @@ actor LocalImageService {
         return createPlaceholderImage(for: word, color: fallbackColor)
     }
 
-    /// Create a placeholder image similar to UnsplashService's implementation
+    /// Create a placeholder image similar to ImageService's implementation
     /// - Parameters:
     ///   - word: The word to create placeholder for
     ///   - color: Optional color (defaults to word-based color)
@@ -133,7 +133,7 @@ extension LocalImageService {
             }
 
         } catch {
-            print("❌ [LocalImageService] Error listing resource files: \(error)")
+            //print("❌ [LocalImageService] Error listing resource files: \(error)")
         }
 
         return imageFiles.sorted()

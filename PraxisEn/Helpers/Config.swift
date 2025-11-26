@@ -41,8 +41,8 @@ struct Config {
         guard let path = Bundle.main.path(forResource: "Secrets", ofType: "plist"),
               let secrets = NSDictionary(contentsOfFile: path),
               let value = secrets[key] as? String else {
-            print("⚠️ Warning: Could not load '\(key)' from Secrets.plist")
-            print("📝 Make sure Secrets.plist exists and contains '\(key)'")
+           // //print("⚠️ Warning: Could not load '\(key)' from Secrets.plist")
+           // //print("📝 Make sure Secrets.plist exists and contains '\(key)'")
             return ""
         }
         return value

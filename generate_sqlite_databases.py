@@ -12,7 +12,7 @@ import os
 
 def create_vocabulary_database():
     """Create vocabulary.db from merged CSV"""
-    print("\n📚 Creating vocabulary database...")
+    //print("\n📚 Creating vocabulary database...")
 
     db_path = 'vocabulary.db'
 
@@ -76,7 +76,7 @@ def create_vocabulary_database():
                 ))
                 rows_inserted += 1
             except sqlite3.IntegrityError as e:
-                print(f"⚠️  Duplicate word skipped: {row['word']}")
+                //print(f"⚠️  Duplicate word skipped: {row['word']}")
 
     conn.commit()
 
@@ -89,21 +89,21 @@ def create_vocabulary_database():
 
     conn.close()
 
-    print(f"✅ Vocabulary database created: {db_path}")
-    print(f"📊 Total words: {total_words}")
-    print("📊 Distribution by level:")
+    //print(f"✅ Vocabulary database created: {db_path}")
+    //print(f"📊 Total words: {total_words}")
+    //print("📊 Distribution by level:")
     for level, count in level_stats:
-        print(f"  {level}: {count:4d} words")
+        //print(f"  {level}: {count:4d} words")
 
     # Get file size
     size_mb = os.path.getsize(db_path) / (1024 * 1024)
-    print(f"💾 Database size: {size_mb:.2f} MB")
+    //print(f"💾 Database size: {size_mb:.2f} MB")
 
     return db_path
 
 def create_sentences_database():
     """Create sentences.db from TSV file"""
-    print("\n📝 Creating sentences database...")
+    //print("\n📝 Creating sentences database...")
 
     db_path = 'sentences.db'
 
@@ -137,7 +137,7 @@ def create_sentences_database():
     # Load TSV file
     tsv_filename = 'Türkçe-İngilizce dillerindeki cümle eşleri - 2025-11-10.tsv'
 
-    print(f"📖 Reading {tsv_filename}...")
+    //print(f"📖 Reading {tsv_filename}...")
 
     rows_inserted = 0
     batch_size = 1000
@@ -181,7 +181,7 @@ def create_sentences_database():
                     batch = []
 
                     if rows_inserted % 50000 == 0:
-                        print(f"  Processed {rows_inserted:,} sentences...")
+                        //print(f"  Processed {rows_inserted:,} sentences...")
 
             # Insert remaining batch
             if batch:
@@ -202,31 +202,31 @@ def create_sentences_database():
 
         conn.close()
 
-        print(f"✅ Sentences database created: {db_path}")
-        print(f"📊 Total sentence pairs: {total_sentences:,}")
-        print("📊 Distribution by estimated difficulty:")
+        //print(f"✅ Sentences database created: {db_path}")
+        //print(f"📊 Total sentence pairs: {total_sentences:,}")
+        //print("📊 Distribution by estimated difficulty:")
         for level, count in difficulty_stats:
-            print(f"  {level}: {count:,} sentences")
+            //print(f"  {level}: {count:,} sentences")
 
         # Get file size
         size_mb = os.path.getsize(db_path) / (1024 * 1024)
-        print(f"💾 Database size: {size_mb:.2f} MB")
+        //print(f"💾 Database size: {size_mb:.2f} MB")
 
         return db_path
 
     except FileNotFoundError:
-        print(f"❌ File not found: {tsv_filename}")
-        print("⚠️  Skipping sentences database creation")
+        //print(f"❌ File not found: {tsv_filename}")
+        //print("⚠️  Skipping sentences database creation")
         return None
     except Exception as e:
-        print(f"❌ Error: {e}")
+        //print(f"❌ Error: {e}")
         import traceback
         traceback.print_exc()
         return None
 
 def main():
-    print("🚀 Generating SQLite databases for iOS app...")
-    print("=" * 60)
+    //print("🚀 Generating SQLite databases for iOS app...")
+    //print("=" * 60)
 
     try:
         # Create vocabulary database
@@ -235,22 +235,22 @@ def main():
         # Create sentences database
         sentences_db = create_sentences_database()
 
-        print("\n" + "=" * 60)
-        print("🎉 Database generation completed!")
-        print("\n📦 Generated files:")
+        //print("\n" + "=" * 60)
+        //print("🎉 Database generation completed!")
+        //print("\n📦 Generated files:")
         if vocab_db and os.path.exists(vocab_db):
-            print(f"  ✅ {vocab_db} ({os.path.getsize(vocab_db) / 1024:.1f} KB)")
+            //print(f"  ✅ {vocab_db} ({os.path.getsize(vocab_db) / 1024:.1f} KB)")
         if sentences_db and os.path.exists(sentences_db):
-            print(f"  ✅ {sentences_db} ({os.path.getsize(sentences_db) / (1024*1024):.1f} MB)")
+            //print(f"  ✅ {sentences_db} ({os.path.getsize(sentences_db) / (1024*1024):.1f} MB)")
 
-        print("\n📋 Next steps:")
-        print("  1. Add these .db files to your Xcode project")
-        print("  2. Set 'Copy Bundle Resources' in Build Phases")
-        print("  3. On first launch, copy from Bundle to Documents directory")
-        print("  4. Use SwiftData to query the databases")
+        //print("\n📋 Next steps:")
+        //print("  1. Add these .db files to your Xcode project")
+        //print("  2. Set 'Copy Bundle Resources' in Build Phases")
+        //print("  3. On first launch, copy from Bundle to Documents directory")
+        //print("  4. Use SwiftData to query the databases")
 
     except Exception as e:
-        print(f"\n❌ Fatal error: {e}")
+        //print(f"\n❌ Fatal error: {e}")
         import traceback
         traceback.print_exc()
 

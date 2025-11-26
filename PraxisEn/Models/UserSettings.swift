@@ -135,7 +135,7 @@ final class UserSettings {
 
         if !isLevelCompleted[next]! {
             currentLevel = next
-            print("🎯 Advanced to level: \(next)")
+            //print("🎯 Advanced to level: \(next)")
         }
     }
 

@@ -26,7 +26,7 @@ class AudioManager {
         let fileName = word.lowercased()
 
         guard let audioPath = Bundle.main.path(forResource: fileName, ofType: "mp3") else {
-            print("⚠️ Audio file not found for word: \(word)")
+            //print("⚠️ Audio file not found for word: \(word)")
             return
         }
 
@@ -38,9 +38,9 @@ class AudioManager {
             audioPlayer?.rate = 0.8  // Play at 80% speed
             audioPlayer?.prepareToPlay()
             audioPlayer?.play()
-            print("🔊 Playing audio for: \(word) at 0.8x speed")
+            //print("🔊 Playing audio for: \(word) at 0.8x speed")
         } catch {
-            print("❌ Error playing audio for \(word): \(error.localizedDescription)")
+            //print("❌ Error playing audio for \(word): \(error.localizedDescription)")
         }
     }
 
@@ -57,7 +57,7 @@ class AudioManager {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            print("❌ Failed to configure audio session: \(error.localizedDescription)")
+            //print("❌ Failed to configure audio session: \(error.localizedDescription)")
         }
     }
 }

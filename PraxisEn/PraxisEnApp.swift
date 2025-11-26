@@ -30,7 +30,7 @@ struct PraxisEnApp: App {
                 for: schema,
                 configurations: [modelConfiguration]
             )
-            print("✅ SwiftData ModelContainer initialized")
+            ////print("✅ SwiftData ModelContainer initialized")
             return container
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
@@ -57,17 +57,17 @@ struct PraxisEnApp: App {
         do {
             // Step 1: Copy SQLite databases from bundle to Documents
             if !DatabaseManager.shared.isDatabaseSetupComplete() {
-                print("🚀 First launch detected - setting up databases...")
+                ////print("🚀 First launch detected - setting up databases...")
                 try await DatabaseManager.shared.setupDatabasesIfNeeded()
 
                 let sizes = try DatabaseManager.shared.getDatabaseSizes()
                 let vocabMB = Double(sizes.vocabulary) / 1_048_576
                 let sentencesMB = Double(sizes.sentences) / 1_048_576
-                print("📊 Database sizes:")
-                print("   - Vocabulary: \(String(format: "%.2f", vocabMB)) MB")
-                print("   - Sentences: \(String(format: "%.2f", sentencesMB)) MB")
+               // //print("📊 Database sizes:")
+                ////print("   - Vocabulary: \(String(format: "%.2f", vocabMB)) MB")
+               // //print("   - Sentences: \(String(format: "%.2f", sentencesMB)) MB")
             } else {
-                print("ℹ️  Databases already set up")
+               // //print("ℹ️  Databases already set up")
             }
 
             // Step 2: Import vocabulary from SQLite to SwiftData
@@ -78,15 +78,15 @@ struct PraxisEnApp: App {
             let existingCount = try modelContext.fetchCount(descriptor)
 
             if existingCount == 0 {
-                print("📥 Importing vocabulary to SwiftData...")
+               // //print("📥 Importing vocabulary to SwiftData...")
                 let importedCount = try await DatabaseManager.shared.importVocabularyToSwiftData(modelContext: modelContext)
-                print("✅ Imported \(importedCount) words to SwiftData")
+              //  //print("✅ Imported \(importedCount) words to SwiftData")
             } else {
-                print("ℹ️  Vocabulary already imported (\(existingCount) words)")
+              //  //print("ℹ️  Vocabulary already imported (\(existingCount) words)")
             }
 
         } catch {
-            print("❌ Database setup failed: \(error.localizedDescription)")
+           // //print("❌ Database setup failed: \(error.localizedDescription)")
         }
     }
 }

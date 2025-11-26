@@ -237,7 +237,8 @@ struct FlashcardCardData {
             onSwipeRight: {},
             onTap: {},
             onSwipeUp: {},
-            onPlayAudio: { print("Play audio") }
+            onPlayAudio: { //print("Play audio")
+            }
         )
         .padding()
     }

@@ -55,7 +55,7 @@ def parse_multicolumn_format(pdf_path):
 def main():
     pdf_path = 'The_Oxford_3000.pdf'
 
-    print(f"📖 Parsing {pdf_path} (multi-column format)...")
+    //print(f"📖 Parsing {pdf_path} (multi-column format)...")
     word_levels = parse_multicolumn_format(pdf_path)
 
     # Sort alphabetically
@@ -68,8 +68,8 @@ def main():
         writer.writeheader()
         writer.writerows(word_levels)
 
-    print(f"✅ Extracted {len(word_levels)} unique words")
-    print(f"✅ Saved to {output_file}")
+    //print(f"✅ Extracted {len(word_levels)} unique words")
+    //print(f"✅ Saved to {output_file}")
 
     # Statistics
     level_counts = {}
@@ -77,26 +77,26 @@ def main():
         level = item['level']
         level_counts[level] = level_counts.get(level, 0) + 1
 
-    print("\n📊 CEFR Level Distribution:")
+    //print("\n📊 CEFR Level Distribution:")
     total = sum(level_counts.values())
     for level in ['A1', 'A2', 'B1', 'B2']:
         count = level_counts.get(level, 0)
         pct = (count / total * 100) if total > 0 else 0
         bar = '█' * (count // 20)
-        print(f"  {level}: {count:4d} words ({pct:5.1f}%) {bar}")
+        //print(f"  {level}: {count:4d} words ({pct:5.1f}%) {bar}")
 
-    print(f"\n✨ Total: {total} words extracted")
+    //print(f"\n✨ Total: {total} words extracted")
 
     if total >= 2900:
-        print("✅ Successfully extracted most of the Oxford 3000!")
+        //print("✅ Successfully extracted most of the Oxford 3000!")
     elif total >= 2000:
-        print("⚠️  Extracted partial list, may need adjustment")
+        //print("⚠️  Extracted partial list, may need adjustment")
     else:
-        print("❌ Low extraction count, parser needs improvement")
+        //print("❌ Low extraction count, parser needs improvement")
 
-    print(f"\n📝 Sample (first 25 words):")
+    //print(f"\n📝 Sample (first 25 words):")
     for i, item in enumerate(word_levels[:25], 1):
-        print(f"  {i:2d}. {item['word']:<25} → {item['level']}")
+        //print(f"  {i:2d}. {item['word']:<25} → {item['level']}")
 
 if __name__ == '__main__':
     main()

@@ -84,7 +84,7 @@ class FlashcardViewModel: ObservableObject {
     /// Load next word using spaced repetition algorithm with user settings
     func loadNextWord() async {
         guard let settings = userSettings else {
-            print("❌ No user settings found - cannot load next word")
+            //print("❌ No user settings found - cannot load next word")
             return
         }
 
@@ -116,10 +116,10 @@ class FlashcardViewModel: ObservableObject {
     /// Handle case when no more words are available in target levels
     private func handleNoMoreWords(settings: UserSettings) async {
         if settings.allLevelsCompleted {
-            print("🎉 All levels completed! No more new words available.")
+            //print("🎉 All levels completed! No more new words available.")
             // Could show completion UI or message
         } else {
-            print("📚 No more words available in current level(s)")
+            //print("📚 No more words available in current level(s)")
             // Could try to advance level or show message
         }
     }
@@ -158,7 +158,7 @@ class FlashcardViewModel: ObservableObject {
         do {
             try modelContext.save()
         } catch {
-            print("❌ Error updating settings progress: \(error)")
+            //print("❌ Error updating settings progress: \(error)")
         }
     }
 
@@ -208,7 +208,7 @@ class FlashcardViewModel: ObservableObject {
         }
 
         guard currentIndex > 0 else {
-            print("ℹ️ No previous word")
+            //print("ℹ️ No previous word")
             return
         }
 
@@ -252,19 +252,19 @@ class FlashcardViewModel: ObservableObject {
         // Check if already cached first
         if let cachedImage = await ImageCache.shared.get(word.word) {
             currentPhoto = cachedImage
-            print("📸 Using cached image for: \(word.word)")
+            //print("📸 Using cached image for: \(word.word)")
             return
         }
 
         // Load in background without showing loading state
-        print("📸 Starting background photo fetch for: \(word.word)")
+        //print("📸 Starting background photo fetch for: \(word.word)")
 
-        // Fetch photo from Unsplash
-        let photo = await UnsplashService.shared.fetchPhotoSafely(for: word.word)
+        // Fetch photo from local images
+        let photo = await ImageService.shared.fetchPhotoSafely(for: word.word)
 
         // Update state silently
         currentPhoto = photo
-        print("📸 Photo loaded and set: \(word.word)")
+        //print("📸 Photo loaded and set: \(word.word)")
     }
 
     /// Load example sentences for current word (max 10)
@@ -272,7 +272,7 @@ class FlashcardViewModel: ObservableObject {
         guard let word = currentWord else { return }
 
         do {
-            print("🔍 Searching sentences for word: '\(word.word)'")
+            //print("🔍 Searching sentences for word: '\(word.word)'")
 
             // Search for sentences containing the word
             let sentences = try await DatabaseManager.shared.searchSentences(
@@ -280,7 +280,7 @@ class FlashcardViewModel: ObservableObject {
                 limit: 10
             )
 
-            print("📥 SQL returned \(sentences.count) sentences")
+            //print("📥 SQL returned \(sentences.count) sentences")
 
             // Filter and limit to best examples
             let filtered = sentences
@@ -290,10 +290,10 @@ class FlashcardViewModel: ObservableObject {
 
             exampleSentences = Array(filtered)
 
-            print("📖 Found \(exampleSentences.count) example sentences for '\(word.word)'")
+            //print("📖 Found \(exampleSentences.count) example sentences for '\(word.word)'")
 
         } catch {
-            print("❌ Error loading examples: \(error)")
+            //print("❌ Error loading examples: \(error)")
             exampleSentences = []
         }
     }
@@ -327,9 +327,9 @@ class FlashcardViewModel: ObservableObject {
 
         do {
             try modelContext.save()
-            print("✅ Word marked as learned: \(word.word)")
+            //print("✅ Word marked as learned: \(word.word)")
         } catch {
-            print("❌ Error saving learned state: \(error)")
+            //print("❌ Error saving learned state: \(error)")
         }
     }
 
@@ -341,9 +341,9 @@ class FlashcardViewModel: ObservableObject {
 
         do {
             try modelContext.save()
-            print("✅ Word reviewed: \(word.word) (count: \(word.reviewCount))")
+            //print("✅ Word reviewed: \(word.word) (count: \(word.reviewCount))")
         } catch {
-            print("❌ Error saving review: \(error)")
+            //print("❌ Error saving review: \(error)")
         }
     }
 
@@ -466,7 +466,7 @@ class FlashcardViewModel: ObservableObject {
         } else {
             // Use spaced repetition logic to select next word preview
             guard let settings = userSettings else {
-                print("❌ No user settings found - cannot load next word preview")
+                //print("❌ No user settings found - cannot load next word preview")
                 nextWordPreview = nil
                 return
             }
@@ -478,7 +478,7 @@ class FlashcardViewModel: ObservableObject {
             ) {
                 nextWordPreview = nextWord
             } else {
-                print("ℹ️ No more words available for preview")
+                //print("ℹ️ No more words available for preview")
                 nextWordPreview = nil
             }
         }
@@ -488,7 +488,7 @@ class FlashcardViewModel: ObservableObject {
             // Load previous photo
             if let prev = previousWordPreview {
                 group.addTask {
-                    let photo = await UnsplashService.shared.fetchPhotoSafely(for: prev.word)
+                    let photo = await ImageService.shared.fetchPhotoSafely(for: prev.word)
                     await MainActor.run {
                         self.previousWordPreviewPhoto = photo
                     }
@@ -498,7 +498,7 @@ class FlashcardViewModel: ObservableObject {
             // Load next photo
             if let next = nextWordPreview {
                 group.addTask {
-                    let photo = await UnsplashService.shared.fetchPhotoSafely(for: next.word)
+                    let photo = await ImageService.shared.fetchPhotoSafely(for: next.word)
                     await MainActor.run {
                         self.nextWordPreviewPhoto = photo
                     }
@@ -611,7 +611,7 @@ class FlashcardViewModel: ObservableObject {
         if let firstSettings = settings.first {
             userSettings = firstSettings
             await updateSettingsProgress(settings: firstSettings)
-            print("✅ Loaded user settings: \(firstSettings.wordSelectionMode.displayName)")
+            //print("✅ Loaded user settings: \(firstSettings.wordSelectionMode.displayName)")
         } else {
             // Create default settings if none exist
             let defaultSettings = UserSettings()
@@ -621,9 +621,9 @@ class FlashcardViewModel: ObservableObject {
                 try modelContext.save()
                 userSettings = defaultSettings
                 await updateSettingsProgress(settings: defaultSettings)
-                print("✅ Created default user settings")
+                //print("✅ Created default user settings")
             } catch {
-                print("❌ Error creating default settings: \(error)")
+                //print("❌ Error creating default settings: \(error)")
             }
         }
     }

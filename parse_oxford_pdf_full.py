@@ -55,7 +55,7 @@ def parse_pdf_with_pdfplumber(pdf_path):
 def main():
     pdf_path = 'The_Oxford_3000.pdf'
 
-    print(f"📖 Reading PDF: {pdf_path}")
+    //print(f"📖 Reading PDF: {pdf_path}")
     word_levels = parse_pdf_with_pdfplumber(pdf_path)
 
     # Sort by word alphabetically
@@ -68,8 +68,8 @@ def main():
         writer.writeheader()
         writer.writerows(word_levels)
 
-    print(f"✅ Extracted {len(word_levels)} words with CEFR levels")
-    print(f"✅ Saved to {output_file}")
+    //print(f"✅ Extracted {len(word_levels)} words with CEFR levels")
+    //print(f"✅ Saved to {output_file}")
 
     # Show statistics
     level_counts = {}
@@ -77,14 +77,14 @@ def main():
         level = item['level']
         level_counts[level] = level_counts.get(level, 0) + 1
 
-    print("\n📊 Distribution by level:")
+    //print("\n📊 Distribution by level:")
     for level in ['A1', 'A2', 'B1', 'B2']:
         count = level_counts.get(level, 0)
-        print(f"  {level}: {count:4d} words")
+        //print(f"  {level}: {count:4d} words")
 
-    print("\n📝 Sample entries:")
+    //print("\n📝 Sample entries:")
     for item in word_levels[:15]:
-        print(f"  {item['word']:<20} → {item['level']}")
+        //print(f"  {item['word']:<20} → {item['level']}")
 
 if __name__ == '__main__':
     main()

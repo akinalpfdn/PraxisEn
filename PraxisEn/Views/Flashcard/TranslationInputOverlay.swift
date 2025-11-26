@@ -183,7 +183,7 @@ struct SecondaryButtonStyle: ButtonStyle {
                         validationState: .typing,
                         validationResult: nil,
                         onSubmit: {
-                            print("Submit")
+                            //print("Submit")
                         },
                         onClear: {
                             input = ""
@@ -192,7 +192,7 @@ struct SecondaryButtonStyle: ButtonStyle {
                             show = false
                         },
                         userStartedTyping: {
-                            print("Started typing")
+                            //print("Started typing")
                         }
                     )
                 }

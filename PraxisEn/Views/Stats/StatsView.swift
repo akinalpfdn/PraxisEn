@@ -244,7 +244,7 @@ struct StatsView: View {
         do {
             try modelContext.save()
         } catch {
-            print("❌ Error updating settings progress: \(error)")
+            //print("❌ Error updating settings progress: \(error)")
         }
     }
 }

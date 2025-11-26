@@ -232,9 +232,7 @@ struct FlashcardContentView: View {
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundColor(.textPrimary)
 
-                Text("Learn English Vocabulary")
-                    .font(AppTypography.captionText)
-                    .foregroundColor(.textSecondary)
+                 
             }
 
             Spacer()

@@ -143,15 +143,7 @@ let randomSentences = try await DatabaseManager.shared.getRandomSentences(
 
 ```swift
 let word = VocabularyWord.sample
-
-print(word.word)                    // "abandon"
-print(word.level)                   // "B2"
-print(word.turkishTranslation)      // "terk etmek"
-print(word.synonymsList)            // ["desert", "leave"]
-print(word.collocationsList)        // ["abandon a plan", "abandon a child"]
-print(word.difficultyTier)          // 4 (1-4 scale)
-print(word.isBeginnerLevel)         // false
-print(word.isIntermediateLevel)     // true
+ 
 ```
 
 ### Track Learning Progress
@@ -237,12 +229,7 @@ func showWordInContext(word: String) async {
         limit: 20
     )
 
-    // Display sentences to user
-    print("Found \(sentences.count) example sentences:")
-    for sentence in sentences {
-        print("TR: \(sentence.turkishText)")
-        print("EN: \(sentence.englishText)")
-    }
+    
 }
 ```
 

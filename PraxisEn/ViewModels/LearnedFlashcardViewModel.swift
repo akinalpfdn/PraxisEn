@@ -27,7 +27,7 @@ class LearnedFlashcardViewModel: ObservableObject {
     private var currentIndex: Int = 0
     
     private let modelContext: ModelContext
-    private let unsplashService = UnsplashService()
+    // ImageService is a singleton - use ImageService.shared directly
     private let databaseManager = DatabaseManager.shared
     private let audioManager = AudioManager.shared
 
@@ -45,7 +45,7 @@ class LearnedFlashcardViewModel: ObservableObject {
             // Shuffle the words for random flashcard order
             self.allLearnedWords = fetchedWords.shuffled()
         } catch {
-            print("Failed to fetch learned words: \(error)")
+            //print("Failed to fetch learned words: \(error)")
             self.allLearnedWords = []
         }
 
@@ -114,12 +114,8 @@ class LearnedFlashcardViewModel: ObservableObject {
             return
         }
         
-        do {
-            let image = try await unsplashService.fetchPhoto(for: word)
-            self.currentPhoto = image
-        } catch {
-            print("Failed to fetch image for \(word): \(error)")
-        }
+        let image = await ImageService.shared.fetchPhotoSafely(for: word)
+        self.currentPhoto = image
         
         isLoadingPhoto = false
     }
@@ -137,7 +133,7 @@ class LearnedFlashcardViewModel: ObservableObject {
             self.exampleSentences = try await databaseManager.searchSentences(containing: word, limit: 10)
         } catch {
             self.exampleSentences = []
-            print("Failed to fetch sentences for \(word): \(error)")
+            //print("Failed to fetch sentences for \(word): \(error)")
         }
     }
 
@@ -164,7 +160,7 @@ class LearnedFlashcardViewModel: ObservableObject {
             // Load previous photo
             if let prev = previousWordPreview {
                 group.addTask {
-                    let photo = await UnsplashService.shared.fetchPhotoSafely(for: prev.word)
+                    let photo = await ImageService.shared.fetchPhotoSafely(for: prev.word)
                     await MainActor.run {
                         self.previousWordPreviewPhoto = photo
                     }
@@ -174,7 +170,7 @@ class LearnedFlashcardViewModel: ObservableObject {
             // Load next photo
             if let next = nextWordPreview {
                 group.addTask {
-                    let photo = await UnsplashService.shared.fetchPhotoSafely(for: next.word)
+                    let photo = await ImageService.shared.fetchPhotoSafely(for: next.word)
                     await MainActor.run {
                         self.nextWordPreviewPhoto = photo
                     }

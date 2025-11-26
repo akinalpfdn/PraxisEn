@@ -18,9 +18,9 @@ class DatabaseManager {
         let vocabularySetup = try await setupVocabularyDatabase()
         let sentencesSetup = try await setupSentencesDatabase()
 
-        print("📚 Database setup completed:")
-        print("  - Vocabulary: \(vocabularySetup ? "✅ Initialized" : "ℹ️  Already exists")")
-        print("  - Sentences: \(sentencesSetup ? "✅ Initialized" : "ℹ️  Already exists")")
+        ////print("📚 Database setup completed:")
+       // //print("  - Vocabulary: \(vocabularySetup ? "✅ Initialized" : "ℹ️  Already exists")")
+       // //print("  - Sentences: \(sentencesSetup ? "✅ Initialized" : "ℹ️  Already exists")")
     }
 
     /// Copies vocabulary.db from bundle to Documents if not already present
@@ -40,7 +40,7 @@ class DatabaseManager {
         }
 
         try FileManager.default.copyItem(at: bundleURL, to: destinationURL)
-        print("✅ Copied \(fileName) to Documents directory")
+        //"✅ Copied \(fileName) to Documents directory")
 
         return true
     }
@@ -62,7 +62,7 @@ class DatabaseManager {
         }
 
         try FileManager.default.copyItem(at: bundleURL, to: destinationURL)
-        print("✅ Copied \(fileName) to Documents directory")
+        ////print("✅ Copied \(fileName) to Documents directory")
 
         return true
     }
@@ -89,7 +89,7 @@ class DatabaseManager {
         let existingCount = try modelContext.fetchCount(descriptor)
 
         if existingCount > 0 {
-            print("ℹ️  Vocabulary already imported (\(existingCount) words)")
+            //print("ℹ️  Vocabulary already imported (\(existingCount) words)")
             return existingCount
         }
 
@@ -141,7 +141,7 @@ class DatabaseManager {
         // Final save
         try modelContext.save()
 
-        print("✅ Imported \(importedCount) vocabulary words to SwiftData")
+        //print("✅ Imported \(importedCount) vocabulary words to SwiftData")
         return importedCount
     }
 
@@ -206,7 +206,7 @@ class DatabaseManager {
         // Final save
         try modelContext.save()
 
-        print("✅ Imported \(importedCount) sentence pairs to SwiftData")
+        //print("✅ Imported \(importedCount) sentence pairs to SwiftData")
         return importedCount
     }
 
@@ -220,11 +220,11 @@ class DatabaseManager {
         let documentsURL = try getDocumentsDirectory()
         let dbURL = documentsURL.appendingPathComponent("sentences.db")
 
-        print("🗄️ Opening database at: \(dbURL.path)")
+        //print("🗄️ Opening database at: \(dbURL.path)")
 
         var db: OpaquePointer?
         guard sqlite3_open(dbURL.path, &db) == SQLITE_OK else {
-            print("❌ Failed to open database")
+            //print("❌ Failed to open database")
             throw DatabaseError.cannotOpenDatabase
         }
         defer { sqlite3_close(db) }
@@ -248,7 +248,7 @@ class DatabaseManager {
         sqlite3_bind_text(statement, 1, (searchPattern as NSString).utf8String, -1, SQLITE_TRANSIENT)
         sqlite3_bind_int(statement, 2, Int32(limit * 5)) // Fetch more for filtering
 
-        print("🔎 Searching English text with pattern: '\(searchPattern)'")
+        //print("🔎 Searching English text with pattern: '\(searchPattern)'")
 
         var allResults: [SentencePair] = []
 
@@ -268,7 +268,7 @@ class DatabaseManager {
             ))
         }
 
-        print("📥 SQL returned \(allResults.count) sentences, filtering for whole word matches...")
+        //print("📥 SQL returned \(allResults.count) sentences, filtering for whole word matches...")
 
         // Filter for whole word matches using Swift regex
         let wordPattern = try! NSRegularExpression(pattern: "\\b\(NSRegularExpression.escapedPattern(for: word))\\b", options: .caseInsensitive)
@@ -277,7 +277,7 @@ class DatabaseManager {
             return wordPattern.firstMatch(in: sentence.englishText, range: range) != nil
         }.prefix(limit)
 
-        print("✅ Found \(results.count) whole-word matches for '\(word)'")
+        //print("✅ Found \(results.count) whole-word matches for '\(word)'")
         return Array(results)
     }
 
