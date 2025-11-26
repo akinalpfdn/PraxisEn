@@ -66,6 +66,39 @@ struct AppSpacing {
     static let lg: CGFloat = 24
     static let xl: CGFloat = 32
     static let xxl: CGFloat = 48
+
+    // Responsive font sizes for hint/progress elements
+    static func responsiveFontSize(baseSize: CGFloat, for screenWidth: CGFloat) -> CGFloat {
+        if screenWidth <= 375 { // iPhone SE 1/2/3
+            return baseSize * 0.75 // 25% smaller
+        } else if screenWidth <= 414 {
+            return baseSize * 0.85 // 15% smaller
+        } else {
+            return baseSize // Normal size
+        }
+    }
+
+    // Responsive padding for UI elements
+    static func responsivePadding(basePadding: CGFloat, for screenWidth: CGFloat) -> CGFloat {
+        if screenWidth <= 375 { // iPhone SE 1/2/3
+            return basePadding * 0.5 // 50% reduction
+        } else if screenWidth <= 414 {
+            return basePadding * 0.75 // 25% reduction
+        } else {
+            return basePadding // Normal padding
+        }
+    }
+
+    // Compact spacing for very small screens
+    static func compact(for screenWidth: CGFloat) -> CGFloat {
+        if screenWidth <= 375 { // iPhone SE 1/2/3
+            return 4 // Very minimal spacing
+        } else if screenWidth <= 414 {
+            return 6 // Small spacing
+        } else {
+            return 8 // Normal spacing
+        }
+    }
 }
 
 // MARK: - Corner Radius
@@ -174,15 +207,15 @@ struct CardDimensions {
     static let aspectRatio: CGFloat = 1.41
     /// Gets responsive width based on available space
     static func width(for screenWidth: CGFloat) -> CGFloat {
-        // Much more aggressive sizing for small screens
+        // Even more aggressive sizing for small screens
         if screenWidth <= 320 { // iPhone SE 2
-            let padding: CGFloat = 20 // Less padding for tiny screens
+            let padding: CGFloat = 16 // Minimal padding for tiny screens
             let availableWidth = screenWidth - padding
-            return min(280, availableWidth) // Much smaller max width
+            return min(260, availableWidth) // Even smaller max width
         } else if screenWidth <= 375 { // iPhone SE 3, iPhone 12 mini
-            let padding: CGFloat = 24
+            let padding: CGFloat = 20
             let availableWidth = screenWidth - padding
-            return min(320, availableWidth)
+            return min(300, availableWidth)
         } else {
             let padding: CGFloat = 32 // 16pt padding on each side
             let availableWidth = screenWidth - padding
