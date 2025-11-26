@@ -168,9 +168,31 @@ struct AppAnimation {
 // MARK: - Card Dimensions
 
 struct CardDimensions {
-    static let width: CGFloat = 340
-    static let height: CGFloat = 480
-    static let aspectRatio: CGFloat = height / width // ~1.41
+    /// Maximum width for cards, but will be responsive to screen size
+    static let maxWidth: CGFloat = 340
+    /// Aspect ratio for cards (height/width)
+    static let aspectRatio: CGFloat = 1.41
+    /// Gets responsive width based on available space
+    static func width(for screenWidth: CGFloat) -> CGFloat {
+        // Much more aggressive sizing for small screens
+        if screenWidth <= 320 { // iPhone SE 2
+            let padding: CGFloat = 20 // Less padding for tiny screens
+            let availableWidth = screenWidth - padding
+            return min(280, availableWidth) // Much smaller max width
+        } else if screenWidth <= 375 { // iPhone SE 3, iPhone 12 mini
+            let padding: CGFloat = 24
+            let availableWidth = screenWidth - padding
+            return min(320, availableWidth)
+        } else {
+            let padding: CGFloat = 32 // 16pt padding on each side
+            let availableWidth = screenWidth - padding
+            return min(maxWidth, availableWidth)
+        }
+    }
+    /// Gets responsive height based on width and aspect ratio
+    static func height(for screenWidth: CGFloat) -> CGFloat {
+        return width(for: screenWidth) * aspectRatio
+    }
 }
 
 // MARK: - Preview
@@ -197,7 +219,7 @@ struct AppTheme_Previews: PreviewProvider {
             // Card example
             RoundedRectangle(cornerRadius: AppCornerRadius.card)
                 .fill(Color.white)
-                .frame(width: CardDimensions.width, height: 200)
+                .frame(width: CardDimensions.maxWidth, height: 200)
                 .cardShadow()
                 .overlay(
                     Text("Card Example")

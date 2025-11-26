@@ -137,7 +137,7 @@ struct FlashcardBackView: View {
                 }
             }
         }
-        .frame(width: CardDimensions.width, height: CardDimensions.height)
+        .frame(width: CardDimensions.width(for: UIScreen.main.bounds.width), height: CardDimensions.height(for: UIScreen.main.bounds.width))
         .cornerRadius(AppCornerRadius.card)
         .cardShadow()
     }

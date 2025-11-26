@@ -87,6 +87,7 @@ struct ContentView: View {
             // Load first word using spaced repetition with settings
             await vm.loadNextWord()
             await vm.updateKnownWordsCount()
+            await vm.updateTotalWordsCount()
         }
 
     }

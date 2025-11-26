@@ -44,7 +44,7 @@ class FlashcardViewModel: ObservableObject {
     @Published var knownWordsCount: Int = 0
 
     /// Total words count (for progress bar)
-    @Published var totalWordsCount: Int = 3000
+    @Published var totalWordsCount: Int = 0
 
     /// Show progress animation (+1 popup)
     @Published var showProgressAnimation: Bool = false
@@ -379,6 +379,13 @@ class FlashcardViewModel: ObservableObject {
         )
         let knownWords = (try? modelContext.fetch(descriptor)) ?? []
         knownWordsCount = knownWords.count
+    }
+
+    /// Update total words count for progress bar
+    func updateTotalWordsCount() async {
+        let descriptor = FetchDescriptor<VocabularyWord>()
+        let allWords = (try? modelContext.fetch(descriptor)) ?? []
+        totalWordsCount = allWords.count
     }
 
     // MARK: - Helper Methods

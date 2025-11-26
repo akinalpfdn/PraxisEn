@@ -21,7 +21,7 @@ struct FlashcardFrontView: View {
                 Image(uiImage: photo)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: CardDimensions.width, height: CardDimensions.height)
+                    .frame(width: CardDimensions.width(for: UIScreen.main.bounds.width), height: CardDimensions.height(for: UIScreen.main.bounds.width))
                     .clipped()
                     .opacity(0.7)  // Light background effect
                     .transition(.opacity.animation(.easeIn(duration: 0.3)))
@@ -67,7 +67,7 @@ struct FlashcardFrontView: View {
                     .frame(height: AppSpacing.xl)
             }
         }
-        .frame(width: CardDimensions.width, height: CardDimensions.height)
+        .frame(width: CardDimensions.width(for: UIScreen.main.bounds.width), height: CardDimensions.height(for: UIScreen.main.bounds.width))
         .cornerRadius(AppCornerRadius.card)
         .cardShadow()
         .id("\(word)-\(photo != nil)")  // Force refresh when photo changes
