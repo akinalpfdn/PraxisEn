@@ -56,12 +56,11 @@ class SpacedRepetitionManager {
         excluding recentWords: [VocabularyWord]
     ) async -> VocabularyWord? {
 
-        var descriptor = FetchDescriptor<VocabularyWord>(
+        let descriptor = FetchDescriptor<VocabularyWord>(
             predicate: #Predicate { word in
                 !word.isKnown && word.repetitions == 0
             }
         )
-        descriptor.fetchLimit = 100
 
         let newWords = (try? context.fetch(descriptor)) ?? []
         let recentIDs = Set(recentWords.map { $0.word })
@@ -168,8 +167,6 @@ class SpacedRepetitionManager {
                     word.level == level
                 }
             )
-            descriptor.fetchLimit = 50
-
             let levelWords = (try? context.fetch(descriptor)) ?? []
             let available = levelWords.filter { !recentIDs.contains($0.word) }
 
@@ -198,7 +195,6 @@ class SpacedRepetitionManager {
                 !word.isKnown && word.repetitions > 0 && targetLevels.contains(word.level)
             }
         )
-        descriptor.fetchLimit = 200
 
         let reviewWords = (try? context.fetch(descriptor)) ?? []
 

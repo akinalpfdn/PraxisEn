@@ -95,154 +95,169 @@ struct ContentView: View {
 
 // MARK: - Flashcard Content View
 
+
 struct FlashcardContentView: View {
     @ObservedObject var viewModel: FlashcardViewModel
     @Binding var navigationPath: [NavigationDestination]
     @State private var showMenuDropdown = false
 
     var body: some View {
-        VStack(spacing: AppSpacing.md) {
-            // Header
-            headerView
-                .zIndex(1.0)
+        GeometryReader { geometry in
+            // Determine if device is small (like iPhone SE) to adjust spacing
+            let isSmallScreen = geometry.size.height < 700
+            
+            VStack(spacing: 0) { // Zero spacing here, we control it with Spacers and padding
+                // Header
+                headerView
+                    .zIndex(1.0)
+                    .padding(.top, isSmallScreen ? 0 : 10) // Add top breathing room on big screens
 
-           
+                // Dynamic spacer: pushes content apart on big screens, keeps it tight on small ones
+                Spacer(minLength: isSmallScreen ? 10 : 20)
 
-            // Flashcard
-            if let word = viewModel.currentWord {
-                SwipeableCardStack(
-                    currentCard: FlashcardCardData(
-                        word: word.word.capitalized,
-                        level: word.level,
-                        translation: word.turkishTranslation,
-                        definition: word.definition,
-                        photo: viewModel.currentPhoto,
-                        isLoadingPhoto: viewModel.isLoadingPhoto,
-                        examples: viewModel.exampleSentences,
-                        synonyms: word.synonymsList,
-                        antonyms: word.antonymsList,
-                        collocations: word.collocationsList,
-                        isFlipped: viewModel.isFlipped
-                    ),
-                    nextCard: viewModel.nextWordPreview.map { next in
-                        FlashcardCardData(
-                            word: next.word.capitalized,
-                            level: next.level,
-                            translation: next.turkishTranslation,
-                            definition: next.definition,
-                            photo: viewModel.nextWordPreviewPhoto,
-                            isLoadingPhoto: false,
-                            examples: [],
-                            synonyms: next.synonymsList,
-                            antonyms: next.antonymsList,
-                            collocations: next.collocationsList,
-                            isFlipped: false
-                        )
-                    },
-                    previousCard: viewModel.previousWordPreview.map { prev in
-                        FlashcardCardData(
-                            word: prev.word.capitalized,
-                            level: prev.level,
-                            translation: prev.turkishTranslation,
-                            definition: prev.definition,
-                            photo: viewModel.previousWordPreviewPhoto,
-                            isLoadingPhoto: false,
-                            examples: [],
-                            synonyms: prev.synonymsList,
-                            antonyms: prev.antonymsList,
-                            collocations: prev.collocationsList,
-                            isFlipped: false
-                        )
-                    },
-                    onSwipeLeft: {
-                        Task {
-                            await viewModel.nextWord()
-                        }
-                    },
-                    onSwipeRight: {
-                        Task {
-                            await viewModel.previousWord()
-                        }
-                    },
-                    onTap: {
-                        viewModel.toggleFlip()
-                    },
-                    onSwipeUp: {
-                        Task {
-                            await handleSwipeUp()
-                        }
-                    },
-                    onPlayAudio: {
-                        viewModel.playWordAudio()
-                    }
-                )
-            } else {
-                // Loading initial word
-                ProgressView("Loading word...")
-                    .font(AppTypography.bodyText)
-                    .foregroundColor(.textSecondary)
-            }
-
-            // Bottom section - compact with no spacer
-            VStack(spacing: UIScreen.main.bounds.width <= 375 ? 4 : 8) {
-                // Hint - compact on small screens
-                hintView
-
-                // Progress bar - compact on small screens
-                ProgressBarView(
-                    current: viewModel.knownWordsCount,
-                    total: viewModel.totalWordsCount,
-                    showAnimation: false  // We show animation separately now
-                )
-            }
-            .padding(.bottom, AppSpacing.responsivePadding(basePadding: 8, for: UIScreen.main.bounds.width))
-
-
-        }
-        .padding(AppSpacing.lg)
-        .overlay(
-            // Translation Input Modal (full-screen overlay)
-            Group {
-                if viewModel.showTranslationInput {
-                    TranslationInputOverlay(
-                        userInput: $viewModel.userTranslationInput,
-                        validationState: viewModel.translationValidationState,
-                        validationResult: viewModel.translationValidationResult,
-                        onSubmit: {
+                // Flashcard Area
+                if let word = viewModel.currentWord {
+                    SwipeableCardStack(
+                        currentCard: FlashcardCardData(
+                            word: word.word.capitalized,
+                            level: word.level,
+                            translation: word.turkishTranslation,
+                            definition: word.definition,
+                            photo: viewModel.currentPhoto,
+                            isLoadingPhoto: viewModel.isLoadingPhoto,
+                            examples: viewModel.exampleSentences,
+                            synonyms: word.synonymsList,
+                            antonyms: word.antonymsList,
+                            collocations: word.collocationsList,
+                            isFlipped: viewModel.isFlipped
+                        ),
+                        nextCard: viewModel.nextWordPreview.map { next in
+                            FlashcardCardData(
+                                word: next.word.capitalized,
+                                level: next.level,
+                                translation: next.turkishTranslation,
+                                definition: next.definition,
+                                photo: viewModel.nextWordPreviewPhoto,
+                                isLoadingPhoto: false,
+                                examples: [],
+                                synonyms: next.synonymsList,
+                                antonyms: next.antonymsList,
+                                collocations: next.collocationsList,
+                                isFlipped: false
+                            )
+                        },
+                        previousCard: viewModel.previousWordPreview.map { prev in
+                            FlashcardCardData(
+                                word: prev.word.capitalized,
+                                level: prev.level,
+                                translation: prev.turkishTranslation,
+                                definition: prev.definition,
+                                photo: viewModel.previousWordPreviewPhoto,
+                                isLoadingPhoto: false,
+                                examples: [],
+                                synonyms: prev.synonymsList,
+                                antonyms: prev.antonymsList,
+                                collocations: prev.collocationsList,
+                                isFlipped: false
+                            )
+                        },
+                        onSwipeLeft: {
                             Task {
-                                await viewModel.submitTranslation()
+                                await viewModel.nextWord()
                             }
                         },
-                        onClear: {
-                            viewModel.clearTranslationInput()
+                        onSwipeRight: {
+                            Task {
+                                await viewModel.previousWord()
+                            }
                         },
-                        onHide: {
-                            viewModel.hideTranslationInputField()
+                        onTap: {
+                            viewModel.toggleFlip()
                         },
-                        userStartedTyping: {
-                            viewModel.userStartedTypingTranslation()
+                        onSwipeUp: {
+                            Task {
+                                await handleSwipeUp()
+                            }
+                        },
+                        onPlayAudio: {
+                            viewModel.playWordAudio()
                         }
                     )
-                    .transition(.asymmetric(
-                        insertion: .scale(scale: 0.8).combined(with: .opacity),
-                        removal: .scale(scale: 0.9).combined(with: .opacity)
-                    ))
-                    .zIndex(1000)
+                    // Limit card height on massive screens so it doesn't look stretched
+                    .frame(maxHeight: isSmallScreen ? .infinity : geometry.size.height * 0.65)
+                    
+                } else {
+                    // Loading initial word
+                    ProgressView("Loading word...")
+                        .font(AppTypography.bodyText)
+                        .foregroundColor(.textSecondary)
+                        .frame(maxHeight: .infinity)
                 }
+
+                // Dynamic spacer: pushes footer to bottom
+                Spacer(minLength: isSmallScreen ? 10 : 30)
+
+                // Bottom section
+                VStack(spacing: isSmallScreen ? 4 : 16) { // More space between hint and progress on big screens
+                    // Hint
+                    hintView
+
+                    // Progress bar
+                    ProgressBarView(
+                        current: viewModel.knownWordsCount,
+                        total: viewModel.totalWordsCount,
+                        showAnimation: false
+                    )
+                }
+                .padding(.bottom, isSmallScreen ? 8 : 20) // Extra bottom padding on safe area for big screens
             }
-        )
-        .overlay(
-            GeometryReader { geometry in
-                if viewModel.showProgressAnimation {
-                    SuccessAnimationView()
-                        .position(
-                            x: geometry.size.width / 2,
-                            y: geometry.size.height * 0.8  // 60% down from top
+            .padding(AppSpacing.lg)
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .overlay(
+                // Translation Input Modal (full-screen overlay)
+                Group {
+                    if viewModel.showTranslationInput {
+                        TranslationInputOverlay(
+                            userInput: $viewModel.userTranslationInput,
+                            validationState: viewModel.translationValidationState,
+                            validationResult: viewModel.translationValidationResult,
+                            onSubmit: {
+                                Task {
+                                    await viewModel.submitTranslation()
+                                }
+                            },
+                            onClear: {
+                                viewModel.clearTranslationInput()
+                            },
+                            onHide: {
+                                viewModel.hideTranslationInputField()
+                            },
+                            userStartedTyping: {
+                                viewModel.userStartedTypingTranslation()
+                            }
                         )
-                        .transition(.opacity)
+                        .transition(.asymmetric(
+                            insertion: .scale(scale: 0.8).combined(with: .opacity),
+                            removal: .scale(scale: 0.9).combined(with: .opacity)
+                        ))
+                        .zIndex(1000)
+                    }
                 }
-            }
-        )
+            )
+            .overlay(
+                // Success Animation
+                Group {
+                    if viewModel.showProgressAnimation {
+                        SuccessAnimationView()
+                            .position(
+                                x: geometry.size.width / 2,
+                                y: geometry.size.height * 0.8
+                            )
+                            .transition(.opacity)
+                    }
+                }
+            )
+        }
     }
 
     // MARK: - Subviews
@@ -253,13 +268,10 @@ struct FlashcardContentView: View {
                 Text("PraxisEn")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundColor(.textPrimary)
-
-                 
             }
 
             Spacer()
 
-            // Stats or settings button could go here
             Image(systemName: "person.circle.fill")
                 .font(.system(size: 32))
                 .foregroundColor(.accentOrange)
@@ -306,10 +318,8 @@ struct FlashcardContentView: View {
 
     private func handleSwipeUp() async {
         if viewModel.userHasSeenBackOfCard() {
-            // User has already seen the back of this card: directly mark as known
             await viewModel.markCurrentWordAsKnown()
         } else {
-            // User hasn't seen the back yet: show translation input
             viewModel.showTranslationInputField()
         }
     }
@@ -349,7 +359,7 @@ struct FlashcardContentView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.accentOrange)
 
-                Text("Tap to flip")
+                Text("Tap")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.textSecondary)
             }
@@ -370,7 +380,7 @@ struct FlashcardContentView: View {
                     .foregroundColor(.accentOrange)
             }
             }.padding(.vertical, 1)
-            
+           
         }
         .padding(.vertical, 1)
         .padding(.horizontal, 24)
@@ -381,7 +391,6 @@ struct FlashcardContentView: View {
         )
     }
 }
-
 // MARK: - ContentView Original (Unused - keeping for reference)
 
 extension ContentView {}
