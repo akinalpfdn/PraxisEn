@@ -29,7 +29,7 @@ class AudioManager {
         let fileName = word.lowercased()
 
         guard let audioPath = Bundle.main.path(forResource: fileName, ofType: "mp3") else {
-            //print("⚠️ Audio file not found for word: \(word)")
+            print("⚠️ Audio file not found for word: \(word)")
             return
         }
 

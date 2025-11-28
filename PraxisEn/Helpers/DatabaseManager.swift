@@ -111,7 +111,7 @@ class DatabaseManager {
         let existingCount = try modelContext.fetchCount(descriptor)
 
         if existingCount > 0 {
-            //print("ℹ️  Vocabulary already imported (\(existingCount) words)")
+            print("ℹ️  Vocabulary already imported (\(existingCount) words)")
             return existingCount
         }
 
@@ -163,7 +163,7 @@ class DatabaseManager {
         // Final save
         try modelContext.save()
 
-        //print("✅ Imported \(importedCount) vocabulary words to SwiftData")
+        print("✅ Imported \(importedCount) vocabulary words to SwiftData")
         return importedCount
     }
 
@@ -377,6 +377,19 @@ class DatabaseManager {
 
     /// Checks if databases are properly set up
     func isDatabaseSetupComplete() -> Bool {
+        guard let documentsURL = try? getDocumentsDirectory() else { return false }
+
+        let vocabularyExists = FileManager.default.fileExists(
+            atPath: documentsURL.appendingPathComponent("vocabulary.db").path
+        )
+
+        // For ODR, vocabulary.db is essential and should be sufficient for app to start
+        // sentences.db is optional and downloaded via ODR
+        return vocabularyExists
+    }
+
+    /// Checks if all databases are set up (including optional ODR content)
+    func isFullDatabaseSetupComplete() -> Bool {
         guard let documentsURL = try? getDocumentsDirectory() else { return false }
 
         let vocabularyExists = FileManager.default.fileExists(
