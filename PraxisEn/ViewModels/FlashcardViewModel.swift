@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import SwiftData
+import OSLog
 internal import Combine
 
 @MainActor
@@ -72,23 +73,25 @@ class FlashcardViewModel: ObservableObject {
     // MARK: - Dependencies
 
     private let modelContext: ModelContext
+    private let logger: Logger
 
     // MARK: - Initialization
 
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
+        self.logger = Logger(subsystem: "PraxisEn", category: "FlashcardViewModel")
     }
 
     // MARK: - Word Management
 
-    /// Load next word using spaced repetition algorithm with user settings
+    /// Load next word using spaced repetition algorithm with ODR-aware content loading
     func loadNextWord() async {
         guard let settings = userSettings else {
-            //print("❌ No user settings found - cannot load next word")
+            logger.error("No user settings found - cannot load next word")
             return
         }
 
-        // Use settings-based selection
+        // Use SpacedRepetitionManager with ODR-aware content loading
         guard let word = await SpacedRepetitionManager.selectNextWordWithSettings(
             from: modelContext,
             excluding: Array(wordHistory.suffix(10)),
@@ -244,6 +247,8 @@ class FlashcardViewModel: ObservableObject {
 
     // MARK: - Content Loading
 
+    
+
     /// Load photo for current word
     private func loadPhotoForCurrentWord() async {
         guard let word = currentWord else { return }
@@ -257,14 +262,10 @@ class FlashcardViewModel: ObservableObject {
         }
 
         // Load in background without showing loading state
-        //print("📸 Starting background photo fetch for: \(word.word)")
-
-        // Fetch photo from local images
         let photo = await ImageService.shared.fetchPhotoSafely(for: word.word)
 
         // Update state silently
         currentPhoto = photo
-        //print("📸 Photo loaded and set: \(word.word)")
     }
 
     /// Load example sentences for current word (max 10)
@@ -272,15 +273,11 @@ class FlashcardViewModel: ObservableObject {
         guard let word = currentWord else { return }
 
         do {
-            //print("🔍 Searching sentences for word: '\(word.word)'")
-
             // Search for sentences containing the word
             let sentences = try await DatabaseManager.shared.searchSentences(
                 containing: word.word,
                 limit: 10
             )
-
-            //print("📥 SQL returned \(sentences.count) sentences")
 
             // Filter and limit to best examples
             let filtered = sentences
@@ -290,10 +287,7 @@ class FlashcardViewModel: ObservableObject {
 
             exampleSentences = Array(filtered)
 
-            //print("📖 Found \(exampleSentences.count) example sentences for '\(word.word)'")
-
         } catch {
-            //print("❌ Error loading examples: \(error)")
             exampleSentences = []
         }
     }
@@ -471,9 +465,9 @@ class FlashcardViewModel: ObservableObject {
         if currentIndex < wordHistory.count - 1 {
             nextWordPreview = wordHistory[currentIndex + 1]
         } else {
-            // Use spaced repetition logic to select next word preview
+            // Use SpacedRepetitionManager for preview with ODR-aware content loading
             guard let settings = userSettings else {
-                //print("❌ No user settings found - cannot load next word preview")
+                logger.error("No user settings found - cannot load next word preview")
                 nextWordPreview = nil
                 return
             }
@@ -485,7 +479,7 @@ class FlashcardViewModel: ObservableObject {
             ) {
                 nextWordPreview = nextWord
             } else {
-                //print("ℹ️ No more words available for preview")
+                logger.info("No more words available for preview")
                 nextWordPreview = nil
             }
         }

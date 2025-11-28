@@ -27,10 +27,10 @@ actor ImageService {
 
         // 2. Try local image (second fastest)
         if let localImage = await LocalImageService.shared.loadLocalImage(for: word) {
-            await ImageCache.shared.set(localImage, forKey: word) 
+            await ImageCache.shared.set(localImage, forKey: word)
             return localImage
         }
- 
+
         let placeholder = createPlaceholderImage(for: word)
         await ImageCache.shared.set(placeholder, forKey: word)
         return placeholder
@@ -67,35 +67,5 @@ actor ImageService {
 
             text.draw(in: textRect, withAttributes: attributes)
         }
-    }
-}
-
-// MARK: - ODR-Aware Image Loading
-
-extension ImageService {
-    /// Fetch photo with ODR awareness - handles seed content and ODR downloads
-    func fetchPhotoWithODR(for word: String) async -> UIImage {
-        logger.info("Fetching ODR-aware photo for word: '\(word)'")
-
-        // 1. Check cache first (fastest)
-        if let cachedImage = await ImageCache.shared.get(word) {
-            logger.debug("Found cached image for word: '\(word)'")
-            return cachedImage
-        }
-
-        // 2. Use ODR-aware local image loading
-        let image = await LocalImageService.shared.loadImageWithODRAndFallback(for: word)
-
-        // 3. Cache the result
-        await ImageCache.shared.set(image, forKey: word)
-
-        logger.info("Loaded ODR-aware image for word: '\(word)'")
-        return image
-    }
-
-    /// Preload seed images to ensure immediate availability
-    func preloadSeedImages() async {
-        logger.info("Preloading seed images via ImageService")
-        await LocalImageService.shared.preloadSeedImages()
     }
 }

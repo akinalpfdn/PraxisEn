@@ -1,8 +1,10 @@
 import Foundation
 import SwiftData
+import OSLog
 
 @MainActor
 class SpacedRepetitionManager {
+    private static let logger = Logger(subsystem: "PraxisEn", category: "SpacedRepetitionManager")
 
     /// Bir sonraki kelimeyi seç
     static func selectNextWord(
@@ -133,12 +135,21 @@ class SpacedRepetitionManager {
         return grouped
     }
 
-    /// Select next word based on user settings (new method)
+    /// Select next word based on user settings with ODR awareness
     static func selectNextWordWithSettings(
         from context: ModelContext,
         excluding recentWords: [VocabularyWord],
         settings: UserSettings
     ) async -> VocabularyWord? {
+        // Check if ODR content is available
+        let isODRAvailable = await ODRManager.shared.checkFullContentAvailability()
+
+        if !isODRAvailable {
+            // ODR not available - prioritize seed words
+            return await selectSeedWordWithSettings(from: context, excluding: recentWords, settings: settings)
+        }
+
+        // ODR available - use normal spaced repetition logic
         let stats = await getReviewStats(from: context)
         let shouldShowNew = shouldSelectNewWord(stats: stats)
 
@@ -147,6 +158,52 @@ class SpacedRepetitionManager {
         } else {
             return await selectReviewWordWithSettings(from: context, excluding: recentWords, settings: settings)
         }
+    }
+
+    /// Select seed word when ODR content is not available
+    private static func selectSeedWordWithSettings(
+        from context: ModelContext,
+        excluding recentWords: [VocabularyWord],
+        settings: UserSettings
+    ) async -> VocabularyWord? {
+        let seedWordSet = ContentConstants.getSeedWordSet()
+        let targetLevels = settings.getTargetLevels()
+        let recentIDs = Set(recentWords.map { $0.word })
+
+        logger.info("Selecting from seed words - ODR content not available")
+
+        for level in targetLevels {
+            var descriptor = FetchDescriptor<VocabularyWord>(
+                predicate: #Predicate { word in
+                    !word.isKnown &&
+                    seedWordSet.contains(word.word.lowercased()) &&
+                    word.repetitions == 0 &&
+                    word.level == level
+                }
+            )
+
+            let levelWords = (try? context.fetch(descriptor)) ?? []
+            let available = levelWords.filter { !recentIDs.contains($0.word) }
+
+            if !available.isEmpty {
+                logger.info("Selected seed word from level: \(level)")
+                return available.randomElement()
+            }
+        }
+
+        // If no seed words available in target levels, try any seed word
+        var descriptor = FetchDescriptor<VocabularyWord>(
+            predicate: #Predicate { word in
+                !word.isKnown &&
+                seedWordSet.contains(word.word.lowercased()) &&
+                word.repetitions == 0
+            }
+        )
+
+        let allSeedWords = (try? context.fetch(descriptor)) ?? []
+        let available = allSeedWords.filter { !recentIDs.contains($0.word) }
+
+        return available.randomElement()
     }
 
     /// Select new word based on user settings

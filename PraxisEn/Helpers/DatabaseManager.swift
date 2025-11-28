@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import SQLite3
+import OSLog
 
 /// Manages database initialization, importing, and setup for the app
 @MainActor
@@ -9,7 +10,13 @@ class DatabaseManager {
 
     static let shared = DatabaseManager()
 
-    private init() {}
+    private init() {
+        self.logger = Logger(subsystem: "PraxisEn", category: "DatabaseManager")
+    }
+
+    // MARK: - Private Properties
+
+    private let logger: Logger
 
     // MARK: - Database Setup
 
@@ -18,9 +25,24 @@ class DatabaseManager {
         let vocabularySetup = try await setupVocabularyDatabase()
         let sentencesSetup = try await setupSentencesDatabase()
 
-        ////print("📚 Database setup completed:")
-       // //print("  - Vocabulary: \(vocabularySetup ? "✅ Initialized" : "ℹ️  Already exists")")
-       // //print("  - Sentences: \(sentencesSetup ? "✅ Initialized" : "ℹ️  Already exists")")
+        logger.info("Database setup completed:")
+        logger.info("  - Vocabulary: \(vocabularySetup ? "✅ Initialized" : "ℹ️  Already exists")")
+        logger.info("  - Sentences: \(sentencesSetup ? "✅ Initialized" : "ℹ️  Already exists")")
+    }
+
+    /// ODR-aware database setup that handles sentences database when ODR completes
+    func setupDatabasesWithODR() async throws {
+        // Always setup vocabulary database (bundled, essential)
+        let vocabularySetup = try await setupVocabularyDatabase()
+        logger.info("Vocabulary database setup: \(vocabularySetup ? "✅ Initialized" : "ℹ️  Already exists")")
+
+        // Setup sentences database only when ODR is complete
+        if await ODRManager.shared.checkFullContentAvailability() {
+            let sentencesSetup = try await setupSentencesDatabase()
+            logger.info("Sentences database setup: \(sentencesSetup ? "✅ Initialized" : "ℹ️  Already exists")")
+        } else {
+            logger.info("Sentences database not available - waiting for ODR download")
+        }
     }
 
     /// Copies vocabulary.db from bundle to Documents if not already present
@@ -279,6 +301,20 @@ class DatabaseManager {
 
         //print("✅ Found \(results.count) whole-word matches for '\(word)'")
         return Array(results)
+    }
+
+    /// ODR-aware sentence search that returns empty results if sentences not downloaded yet
+    func searchSentencesWithFallback(
+        containing word: String,
+        limit: Int = 50
+    ) async throws -> [SentencePair] {
+        // Only search sentences if ODR content is available
+        if await ODRManager.shared.checkFullContentAvailability() {
+            return try await searchSentences(containing: word, limit: limit)
+        } else {
+            logger.info("Sentences not available for word '\(word)' - ODR content not downloaded")
+            return []
+        }
     }
 
     /// Gets random sentences for practice
