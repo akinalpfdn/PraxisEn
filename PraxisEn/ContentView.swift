@@ -101,7 +101,7 @@ struct FlashcardContentView: View {
     @State private var showMenuDropdown = false
 
     var body: some View {
-        VStack(spacing: AppSpacing.lg) {
+        VStack(spacing: AppSpacing.md) {
             // Header
             headerView
                 .zIndex(1.0)
@@ -183,16 +183,19 @@ struct FlashcardContentView: View {
                     .foregroundColor(.textSecondary)
             }
 
-            // Bottom hint
-            hintView
+            // Bottom section - compact with no spacer
+            VStack(spacing: UIScreen.main.bounds.width <= 375 ? 4 : 8) {
+                // Hint - compact on small screens
+                hintView
 
-            // Progress bar
-            ProgressBarView(
-                current: viewModel.knownWordsCount,
-                total: viewModel.totalWordsCount,
-                showAnimation: false  // We show animation separately now
-            )
-            .padding(.bottom, AppSpacing.md)
+                // Progress bar - compact on small screens
+                ProgressBarView(
+                    current: viewModel.knownWordsCount,
+                    total: viewModel.totalWordsCount,
+                    showAnimation: false  // We show animation separately now
+                )
+            }
+            .padding(.bottom, AppSpacing.responsivePadding(basePadding: 8, for: UIScreen.main.bounds.width))
 
 
         }
@@ -324,58 +327,58 @@ struct FlashcardContentView: View {
                     .foregroundColor(.textSecondary)
             }
             HStack(spacing: AppSpacing.lg) {
-                // Swipe left hint
-                HStack(spacing: 6) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.accentOrange)
-                    
-                    Text("Swipe")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.textSecondary)
-                }
-                
-                // Circular divider
-                Circle()
-                    .fill(Color.textTertiary.opacity(0.3))
-                    .frame(width: 4, height: 4)
-                
-                // Tap hint
-                HStack(spacing: 6) {
-                    Image(systemName: "hand.tap.fill")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.accentOrange)
-                    
-                    Text("Tap to flip")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.textSecondary)
-                }
-                
-                // Circular divider
-                Circle()
-                    .fill(Color.textTertiary.opacity(0.3))
-                    .frame(width: 4, height: 4)
-                
-                // Swipe right hint
-                HStack(spacing: 6) {
-                    Text("Swipe")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.textSecondary)
-                    
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.accentOrange)
-                }
-            }.padding(.vertical, 8)
+            // Swipe left hint
+            HStack(spacing: 6) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.accentOrange)
+
+                Text("Swipe")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.textSecondary)
+            }
+
+            // Circular divider
+            Circle()
+                .fill(Color.textTertiary.opacity(0.3))
+                .frame(width: 4, height: 4)
+
+            // Tap hint
+            HStack(spacing: 6) {
+                Image(systemName: "hand.tap.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.accentOrange)
+
+                Text("Tap to flip")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.textSecondary)
+            }
+
+            // Circular divider
+            Circle()
+                .fill(Color.textTertiary.opacity(0.3))
+                .frame(width: 4, height: 4)
+
+            // Swipe right hint
+            HStack(spacing: 6) {
+                Text("Swipe")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.textSecondary)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.accentOrange)
+            }
+            }.padding(.vertical, 1)
             
         }
-        .padding(.vertical, 8)
-                    .padding(.horizontal, 24)
-                    .background(
-                        Capsule()
-                            .fill(Color.white.opacity(0.4))
-                            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
-                    )
+        .padding(.vertical, 1)
+        .padding(.horizontal, 24)
+        .background(
+            Capsule()
+                .fill(Color.white.opacity(0.4))
+                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
+        )
     }
 }
 

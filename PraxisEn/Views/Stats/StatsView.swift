@@ -188,13 +188,8 @@ struct StatsView: View {
     }
 
     private func levelEmoji(for level: String) -> String {
-        switch level {
-        case "A1": return "🟢"
-        case "A2": return "🔵"
-        case "B1": return "🟠"
-        case "B2": return "🔴"
-        default: return "⚪️"
-        }
+        return ""//no need for a emoji
+        
     }
 
     // MARK: - Data Loading
