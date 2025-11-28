@@ -10,6 +10,10 @@ import SwiftData
 
 @main
 struct PraxisEnApp: App {
+    // MARK: - ODR Manager
+
+    @StateObject private var odrManager = ODRManager.shared
+
     // MARK: - SwiftData Container
 
     var sharedModelContainer: ModelContainer = {
@@ -43,50 +47,83 @@ struct PraxisEnApp: App {
         WindowGroup {
             ContentView()
                 .task {
-                    // Setup databases on first launch BEFORE any other operations
-                    await setupDatabasesOnFirstLaunch()
+                    // Initialize ODR system and setup databases on first launch
+                    await initializeAppOnFirstLaunch()
                 }
         }
         .modelContainer(sharedModelContainer)
     }
 
-    // MARK: - Database Setup
+    // MARK: - App Initialization
 
     @MainActor
-    private func setupDatabasesOnFirstLaunch() async {
+    private func initializeAppOnFirstLaunch() async {
         do {
-            // Step 1: Copy SQLite databases from bundle to Documents
-            if !DatabaseManager.shared.isDatabaseSetupComplete() {
-                ////print("🚀 First launch detected - setting up databases...")
-                try await DatabaseManager.shared.setupDatabasesIfNeeded()
+            // Step 1: Initialize ODR system
+            await odrManager.initializeODR()
 
-                let sizes = try DatabaseManager.shared.getDatabaseSizes()
-                let vocabMB = Double(sizes.vocabulary) / 1_048_576
-                let sentencesMB = Double(sizes.sentences) / 1_048_576
-               // //print("📊 Database sizes:")
-                ////print("   - Vocabulary: \(String(format: "%.2f", vocabMB)) MB")
-               // //print("   - Sentences: \(String(format: "%.2f", sentencesMB)) MB")
+            // Step 2: Setup databases with ODR awareness
+            if !DatabaseManager.shared.isDatabaseSetupComplete() {
+                try await DatabaseManager.shared.setupDatabasesWithODR()
             } else {
-               // //print("ℹ️  Databases already set up")
+                // If databases already set up, check if sentences need to be imported after ODR
+                if odrManager.checkFullContentAvailability() {
+                    try await DatabaseManager.shared.setupDatabasesIfNeeded()
+                }
             }
 
-            // Step 2: Import vocabulary from SQLite to SwiftData
+            // Step 3: Import vocabulary from SQLite to SwiftData
             let modelContext = sharedModelContainer.mainContext
-
-            // Check if already imported
             let descriptor = FetchDescriptor<VocabularyWord>()
             let existingCount = try modelContext.fetchCount(descriptor)
 
             if existingCount == 0 {
-               // //print("📥 Importing vocabulary to SwiftData...")
                 let importedCount = try await DatabaseManager.shared.importVocabularyToSwiftData(modelContext: modelContext)
-              //  //print("✅ Imported \(importedCount) words to SwiftData")
-            } else {
-              //  //print("ℹ️  Vocabulary already imported (\(existingCount) words)")
+            }
+
+            // Step 4: Preload seed content for immediate availability
+            await preloadSeedContent()
+
+            // Step 5: Start silent background download if not complete
+            if !odrManager.checkFullContentAvailability() {
+                Task {
+                    do {
+                        try await odrManager.requestFullContentDownload()
+                    } catch {
+                        // Silently handle download errors - user can continue with seed content
+                        // Error is logged automatically in ODRManager
+                    }
+                }
             }
 
         } catch {
-           // //print("❌ Database setup failed: \(error.localizedDescription)")
+            // Handle initialization errors gracefully
+        }
+    }
+
+    // MARK: - Seed Content Preloading
+
+    private func preloadSeedContent() async {
+        await withTaskGroup(of: Void.self) { group in
+            // Preload seed images
+            group.addTask {
+                // Preload common seed word images for immediate display
+                let seedWords = ["hello", "yes", "no", "thank", "please", "water", "food"]
+                for seedWord in seedWords {
+                    _ = await ImageService.shared.fetchPhotoSafely(for: seedWord)
+                }
+            }
+
+            // Preload seed audio
+            group.addTask {
+                // Note: AudioManager.play is synchronous, no need for await
+                let seedWords = ["hello", "yes", "no", "thank", "please", "water", "food"]
+                for seedWord in seedWords {
+                    AudioManager.shared.play(word: seedWord)
+                    // Immediately stop to just cache the audio
+                    AudioManager.shared.stop()
+                }
+            }
         }
     }
 }

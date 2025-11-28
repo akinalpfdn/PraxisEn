@@ -176,7 +176,7 @@ class SpacedRepetitionManager {
             var descriptor = FetchDescriptor<VocabularyWord>(
                 predicate: #Predicate { word in
                     !word.isKnown &&
-                    seedWordSet.contains(word.word.lowercased()) &&
+                    seedWordSet.contains(word.word) &&
                     word.repetitions == 0 &&
                     word.level == level
                 }
@@ -195,7 +195,7 @@ class SpacedRepetitionManager {
         var descriptor = FetchDescriptor<VocabularyWord>(
             predicate: #Predicate { word in
                 !word.isKnown &&
-                seedWordSet.contains(word.word.lowercased()) &&
+                seedWordSet.contains(word.word) &&
                 word.repetitions == 0
             }
         )
