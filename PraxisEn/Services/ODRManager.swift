@@ -1,6 +1,6 @@
 import Foundation
 import OSLog
-import Combine
+internal import Combine
 
 /// Manages On-Demand Resources (ODR) for PraxisEn app
 /// Handles silent background download of full content while providing immediate access to seed content
@@ -8,10 +8,13 @@ import Combine
 class ODRManager: ObservableObject {
     static let shared = ODRManager()
 
+    // MARK: - Published Properties
+
+    @Published private var isDownloadComplete: Bool = false
+    @Published private var isDownloading: Bool = false
+
     // MARK: - Private Properties
 
-    private var isDownloadComplete: Bool = false
-    private var isDownloading: Bool = false
     private let logger = Logger(subsystem: "PraxisEn", category: "ODR")
     private let fullContentTag = "all_media"
 
@@ -54,7 +57,7 @@ class ODRManager: ObservableObject {
             return
         }
 
-        logger.info("Starting download of full content with tag: \(fullContentTag)")
+        logger.info("Starting download of full content with tag: \(self.fullContentTag)")
         isDownloading = true
 
         do {

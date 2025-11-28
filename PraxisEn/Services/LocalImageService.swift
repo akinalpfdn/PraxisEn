@@ -1,5 +1,6 @@
 import UIKit
 import SwiftUI
+import OSLog
 
 /// Service for loading local images from the app bundle
 actor LocalImageService {
@@ -7,7 +8,13 @@ actor LocalImageService {
 
     static let shared = LocalImageService()
 
-    private init() {}
+    private init() {
+        self.logger = Logger(subsystem: "PraxisEn", category: "LocalImageService")
+    }
+
+    // MARK: - Private Properties
+
+    private let logger: Logger
 
     // MARK: - Local Image Loading
 
@@ -148,5 +155,81 @@ extension LocalImageService {
         let percentage = words.isEmpty ? 0.0 : (Double(count) / Double(words.count)) * 100.0
 
         return (count, percentage)
+    }
+}
+
+// MARK: - ODR-Aware Image Loading
+
+extension LocalImageService {
+    /// Load image with ODR awareness - prioritizes bundled seed content
+    /// - Parameter word: The word to find an image for
+    /// - Returns: UIImage if found, nil otherwise
+    func loadImageWithODR(for word: String) async -> UIImage? {
+        // Normalize the word for consistent matching
+        let normalizedWord = word.lowercased()
+
+        // Check if this is a seed word first (immediate availability)
+        if await ODRManager.shared.isSeedWord(normalizedWord) {
+            logger.info("Loading seed image for word: '\(word)'")
+            return loadLocalImage(for: word)
+        }
+
+        // If not a seed word, check if full content is available
+        if await ODRManager.shared.checkFullContentAvailability() {
+            logger.info("Loading ODR image for word: '\(word)'")
+            return loadLocalImage(for: word)
+        }
+
+        // No content available yet
+        logger.info("No image available for word: '\(word)' - content not downloaded")
+        return nil
+    }
+
+    /// Load image with ODR awareness and fallback to placeholder
+    /// - Parameter word: The word to find an image for
+    /// - Returns: UIImage (either actual image or placeholder)
+    func loadImageWithODRAndFallback(for word: String) async -> UIImage {
+        if let image = await loadImageWithODR(for: word) {
+            return image
+        }
+
+        // Return placeholder if no image available
+        logger.info("Using placeholder for word: '\(word)'")
+        return createPlaceholderImage(for: word)
+    }
+
+    /// Preload seed images to ensure immediate availability
+    func preloadSeedImages() async {
+        logger.info("Preloading seed images")
+
+        let seedWords = await ODRManager.shared.getSeedWords()
+        var loadedCount = 0
+
+        for seedWord in seedWords {
+            if let _ = loadLocalImage(for: seedWord) {
+                loadedCount += 1
+            }
+        }
+
+        logger.info("Preloaded \(loadedCount)/\(seedWords.count) seed images")
+    }
+
+    /// Check if image is available for a word considering ODR status
+    /// - Parameter word: The word to check
+    /// - Returns: true if image is available, false otherwise
+    func isImageAvailableWithODR(for word: String) async -> Bool {
+        let normalizedWord = word.lowercased()
+
+        // Seed words are always available
+        if await ODRManager.shared.isSeedWord(normalizedWord) {
+            return localImageExists(for: word)
+        }
+
+        // Non-seed words are available only if full content is downloaded
+        if await ODRManager.shared.checkFullContentAvailability() {
+            return localImageExists(for: word)
+        }
+
+        return false
     }
 }
