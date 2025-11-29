@@ -94,6 +94,15 @@ struct ContentView: View {
             await vm.updateKnownWordsCount()
             await vm.updateTotalWordsCount()
         }
+        .sheet(isPresented: Binding(
+            get: { viewModel?.showDailyLimitAlert ?? false },
+            set: { viewModel?.showDailyLimitAlert = $0 }
+        )) {
+            DailyLimitExceededView(isPresented: Binding(
+                get: { viewModel?.showDailyLimitAlert ?? false },
+                set: { viewModel?.showDailyLimitAlert = $0 }
+            ))
+        }
 
     }
 }
@@ -270,9 +279,17 @@ struct FlashcardContentView: View {
     private var headerView: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("PraxisEn")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(.textPrimary)
+                HStack(spacing: AppSpacing.xs) {
+                    Text("PraxisEn")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(.textPrimary)
+
+                    if SubscriptionManager.shared.isPremiumActive {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.accentOrange)
+                    }
+                }
             }
 
             Spacer()

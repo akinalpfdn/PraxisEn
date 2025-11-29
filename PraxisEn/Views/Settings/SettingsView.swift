@@ -7,6 +7,8 @@ struct SettingsView: View {
     @State private var settings: UserSettings?
     @State private var isLoading = true
     @State private var showResetConfirmation = false
+    @State private var showUpgradeView = false
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
 
     var body: some View {
         NavigationView {
@@ -40,6 +42,9 @@ struct SettingsView: View {
                 Text("This will permanently delete all your learning progress:\n\n• Reset all word learning status\n• Clear learned words history\n• Restart from A1 in progressive mode\n\nThis action cannot be undone.")
             }
         }
+        .sheet(isPresented: $showUpgradeView) {
+            PremiumUpgradeView()
+        }
     }
 
     // MARK: - Settings Content
@@ -49,7 +54,8 @@ struct SettingsView: View {
             // Learning Mode Section
             learningModeSection(settings: settings)
 
-            // Removed progress section - now only in StatsView
+            // Subscription Section
+            subscriptionSection()
 
             // Actions Section
             actionsSection(settings: settings)
@@ -73,6 +79,48 @@ struct SettingsView: View {
                         updateSettings(mode: mode)
                     }
                 }
+            }
+        }
+        .padding(AppSpacing.lg)
+        .background(Color.white)
+        .cornerRadius(AppCornerRadius.card)
+        .cardShadow()
+    }
+
+    private func subscriptionSection() -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            HStack {
+                Text("Subscription")
+                    .font(AppTypography.cardTitle)
+                    .foregroundColor(.textPrimary)
+
+                Spacer()
+
+                if subscriptionManager.isPremiumActive {
+                    HStack(spacing: AppSpacing.xs) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.success)
+                        Text("Active")
+                            .font(AppTypography.captionText)
+                            .foregroundColor(.success)
+                            .fontWeight(.medium)
+                    }
+                }
+            }
+
+            // Subscription Status Card
+            subscriptionStatusCard
+
+            // Daily Swipe Info
+            dailySwipeInfo
+
+            // Actions
+            VStack(spacing: AppSpacing.sm) {
+                if !subscriptionManager.isPremiumActive {
+                    upgradeButton
+                }
+
+                restorePurchasesButton
             }
         }
         .padding(AppSpacing.lg)
@@ -355,6 +403,122 @@ struct SettingsView: View {
             //print("🔄 Successfully reset all learning progress")
         } catch {
             //print("❌ Error resetting progress: \(error)")
+        }
+    }
+
+    // MARK: - Subscription Helper Views
+
+    private var subscriptionStatusCard: some View {
+        HStack(spacing: AppSpacing.md) {
+            Image(systemName: subscriptionManager.isPremiumActive ? "crown.fill" : "crown")
+                .font(.system(size: 24))
+                .foregroundColor(subscriptionManager.isPremiumActive ? .accentOrange : .textTertiary)
+
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text(subscriptionManager.isPremiumActive ? "Premium" : "Free")
+                    .font(AppTypography.bodyText)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.textPrimary)
+
+                Text(subscriptionManager.isPremiumActive ? "Unlimited access to all features" : "Basic features with daily limits")
+                    .font(AppTypography.captionText)
+                    .foregroundColor(.textSecondary)
+            }
+
+            Spacer()
+
+            if !subscriptionManager.isPremiumActive {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14))
+                    .foregroundColor(.textTertiary)
+            }
+        }
+        .padding(AppSpacing.md)
+        .background(subscriptionManager.isPremiumActive ? Color.accentOrange.opacity(0.1) : Color.creamSecondary)
+        .cornerRadius(AppCornerRadius.medium)
+        .onTapGesture {
+            if !subscriptionManager.isPremiumActive {
+                showUpgradeView = true
+            }
+        }
+    }
+
+    private var dailySwipeInfo: some View {
+        let swipeInfo = SubscriptionManager.shared.getDailySwipeInfo()
+
+        return HStack(spacing: AppSpacing.md) {
+            Image(systemName: "arrow.up.circle.fill")
+                .font(.system(size: 16))
+                .foregroundColor(.textTertiary)
+
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text("Daily Swipes")
+                    .font(AppTypography.captionText)
+                    .fontWeight(.medium)
+                    .foregroundColor(.textPrimary)
+
+                Text("\(swipeInfo.used) / \(swipeInfo.limit == Int.max ? "∞" : "\(swipeInfo.limit)") used")
+                    .font(AppTypography.captionText)
+                    .foregroundColor(.textSecondary)
+
+                if !subscriptionManager.isPremiumActive {
+                // Progress bar for free users
+                let progress = min(Double(swipeInfo.used) / Double(swipeInfo.limit), 1.0)
+                ProgressView(value: progress)
+                    .progressViewStyle(LinearProgressViewStyle(tint: .accentOrange))
+                    
+            }
+            }
+
+            
+
+            
+        }
+        .padding(.vertical, AppSpacing.xs)
+    }
+
+    private var upgradeButton: some View {
+        Button {
+            showUpgradeView = true
+        } label: {
+            HStack {
+                Image(systemName: "crown.fill")
+                    .font(.system(size: 16))
+
+                Text("Upgrade to Premium")
+                    .font(AppTypography.bodyText)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, AppSpacing.md)
+            .background(Color.accentOrange)
+            .cornerRadius(AppCornerRadius.medium)
+            .buttonShadow()
+        }
+    }
+
+    private var restorePurchasesButton: some View {
+        Button {
+            Task {
+                await restorePurchases()
+            }
+        } label: {
+            Text("Restore Purchases")
+                .font(AppTypography.bodyText)
+                .foregroundColor(.accentOrange)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, AppSpacing.md)
+                .background(Color.creamSecondary)
+                .cornerRadius(AppCornerRadius.medium)
+        }
+    }
+
+    private func restorePurchases() async {
+        do {
+            try await PurchaseManager.shared.restorePurchases()
+        } catch {
+            print("Restore failed: \(error)")
         }
     }
 }
