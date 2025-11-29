@@ -21,6 +21,7 @@ DerivedData/
 !default.mode2v3
 *.perspectivev3
 !default.perspectivev3
+Media/Cloud/sentences.db
 
 ## Obj-C/Swift specific
 *.hmap
