@@ -32,6 +32,26 @@ final class UserSettings {
     /// Total words count per level for progress calculation
     var totalWordsCount: [String: Int]
 
+    // MARK: - Subscription Properties
+
+    /// Current subscription tier
+    var subscriptionTier: SubscriptionTier
+
+    /// Whether subscription is currently active
+    var subscriptionIsActive: Bool
+
+    /// When subscription expires (nil for lifetime or non-subscribers)
+    var subscriptionExpirationDate: Date?
+
+    /// Date when subscription started
+    var subscriptionStartDate: Date?
+
+    /// How many daily swipes the user has used (free tier only)
+    var dailySwipesUsed: Int
+
+    /// Last date when daily swipe count was reset
+    var lastSwipeResetDate: Date
+
     // MARK: - Initialization
 
     init() {
@@ -65,6 +85,14 @@ final class UserSettings {
             "B1": 0,
             "B2": 0
         ]
+
+        // Initialize subscription properties (default to free tier)
+        self.subscriptionTier = .free
+        self.subscriptionIsActive = false
+        self.subscriptionExpirationDate = nil
+        self.subscriptionStartDate = nil
+        self.dailySwipesUsed = 0
+        self.lastSwipeResetDate = Date()
     }
 
     // MARK: - Computed Properties
@@ -201,6 +229,33 @@ extension UserSettings {
                 return "Learn A1 → A2 → B1 → B2 in order"
             case .randomAllLevels:
                 return "Random words from all difficulty levels"
+            }
+        }
+    }
+}
+
+// MARK: - Subscription Tier Enum
+
+extension UserSettings {
+    enum SubscriptionTier: String, CaseIterable, Codable {
+        case free = "free"
+        case premium = "premium"
+
+        var displayName: String {
+            switch self {
+            case .free:
+                return "Free"
+            case .premium:
+                return "Premium"
+            }
+        }
+
+        var description: String {
+            switch self {
+            case .free:
+                return "Basic features with limitations"
+            case .premium:
+                return "Full access to all features"
             }
         }
     }

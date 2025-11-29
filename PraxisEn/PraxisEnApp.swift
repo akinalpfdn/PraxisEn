@@ -10,9 +10,11 @@ import SwiftData
 
 @main
 struct PraxisEnApp: App {
-    // MARK: - ODR Manager
+    // MARK: - Managers
 
     @StateObject private var odrManager = ODRManager.shared
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
+    @StateObject private var purchaseManager = PurchaseManager.shared
 
     // MARK: - SwiftData Container
 

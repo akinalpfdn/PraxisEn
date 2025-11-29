@@ -77,6 +77,11 @@ struct ContentView: View {
                 isDatabaseReady = true
             }
 
+            // Initialize subscription managers
+            SubscriptionManager.shared.configure(with: modelContext)
+            await PurchaseManager.shared.loadProducts()
+            await PurchaseManager.shared.checkSubscriptionStatus()
+
             // Initialize ViewModel with correct context
             let vm = FlashcardViewModel(modelContext: modelContext)
             viewModel = vm
