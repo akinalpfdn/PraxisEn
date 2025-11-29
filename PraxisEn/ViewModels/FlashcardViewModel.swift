@@ -53,6 +53,9 @@ class FlashcardViewModel: ObservableObject {
     /// Show daily limit alert
     @Published var showDailyLimitAlert: Bool = false
 
+    /// Show level restriction upgrade prompt
+    @Published var showLevelRestrictionAlert: Bool = false
+
     // MARK: - Translation Input Properties
 
     /// Whether the translation input field should be shown

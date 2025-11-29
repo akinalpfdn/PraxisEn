@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var isLoading = true
     @State private var showResetConfirmation = false
     @State private var showUpgradeView = false
+    @State private var showSubscriptionStatus = false
     @StateObject private var subscriptionManager = SubscriptionManager.shared
 
     var body: some View {
@@ -44,6 +45,9 @@ struct SettingsView: View {
         }
         .fullScreenCover(isPresented: $showUpgradeView) {
             PremiumUpgradeView()
+        }
+        .fullScreenCover(isPresented: $showSubscriptionStatus) {
+            SubscriptionStatusView()
         }
     }
 
@@ -121,6 +125,10 @@ struct SettingsView: View {
                 }
 
                 restorePurchasesButton
+
+                if subscriptionManager.isPremiumActive {
+                    manageSubscriptionButton
+                }
             }
         }
         .padding(AppSpacing.lg)
@@ -519,6 +527,27 @@ struct SettingsView: View {
             try await PurchaseManager.shared.restorePurchases()
         } catch {
             print("Restore failed: \(error)")
+        }
+    }
+
+    private var manageSubscriptionButton: some View {
+        Button {
+            showSubscriptionStatus = true
+        } label: {
+            HStack {
+                Image(systemName: "crown.fill")
+                    .font(.system(size: 16))
+
+                Text("Manage Subscription")
+                    .font(AppTypography.bodyText)
+                    .fontWeight(.medium)
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, AppSpacing.md)
+            .background(Color.accentBrown)
+            .cornerRadius(AppCornerRadius.medium)
+            .buttonShadow()
         }
     }
 }

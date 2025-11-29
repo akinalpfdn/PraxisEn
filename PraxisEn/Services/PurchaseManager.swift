@@ -76,6 +76,16 @@ class PurchaseManager: ObservableObject {
                     expirationDate: transaction.expirationDate
                 )
 
+                // Post notification for UI components to react
+                NotificationCenter.default.post(
+                    name: .subscriptionDidActivate,
+                    object: nil,
+                    userInfo: [
+                        "startDate": transaction.purchaseDate,
+                        "expirationDate": transaction.expirationDate as Any
+                    ]
+                )
+
                 await transaction.finish() // Consume the transaction
                 purchaseState = .purchased
                 print("✅ Premium purchase successful")

@@ -108,176 +108,206 @@ struct FlashcardContentView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            // Determine if device is small (like iPhone SE) to adjust spacing
-            let isSmallScreen = geometry.size.height < 700
-            
-            VStack(spacing: 0) { // Zero spacing here, we control it with Spacers and padding
-                // Header
-                headerView
-                    .zIndex(1.0)
-                    .padding(.top, isSmallScreen ? 0 : 10) // Add top breathing room on big screens
+            mainContent(geometry: geometry)
+                .overlay(overlaysContainer(geometry: geometry))
+        }
+    }
 
-                // Dynamic spacer: pushes content apart on big screens, keeps it tight on small ones
-                Spacer(minLength: isSmallScreen ? 10 : 20)
+    // MARK: - Main Content
 
-                // Flashcard Area
-                if let word = viewModel.currentWord {
-                    SwipeableCardStack(
-                        currentCard: FlashcardCardData(
-                            word: word.word.capitalized,
-                            level: word.level,
-                            translation: word.turkishTranslation,
-                            definition: word.definition,
-                            photo: viewModel.currentPhoto,
-                            isLoadingPhoto: viewModel.isLoadingPhoto,
-                            examples: viewModel.exampleSentences,
-                            synonyms: word.synonymsList,
-                            antonyms: word.antonymsList,
-                            collocations: word.collocationsList,
-                            isFlipped: viewModel.isFlipped
-                        ),
-                        nextCard: viewModel.nextWordPreview.map { next in
-                            FlashcardCardData(
-                                word: next.word.capitalized,
-                                level: next.level,
-                                translation: next.turkishTranslation,
-                                definition: next.definition,
-                                photo: viewModel.nextWordPreviewPhoto,
-                                isLoadingPhoto: false,
-                                examples: [],
-                                synonyms: next.synonymsList,
-                                antonyms: next.antonymsList,
-                                collocations: next.collocationsList,
-                                isFlipped: false
-                            )
-                        },
-                        previousCard: viewModel.previousWordPreview.map { prev in
-                            FlashcardCardData(
-                                word: prev.word.capitalized,
-                                level: prev.level,
-                                translation: prev.turkishTranslation,
-                                definition: prev.definition,
-                                photo: viewModel.previousWordPreviewPhoto,
-                                isLoadingPhoto: false,
-                                examples: [],
-                                synonyms: prev.synonymsList,
-                                antonyms: prev.antonymsList,
-                                collocations: prev.collocationsList,
-                                isFlipped: false
-                            )
-                        },
-                        onSwipeLeft: {
-                            Task {
-                                await viewModel.nextWord()
-                            }
-                        },
-                        onSwipeRight: {
-                            Task {
-                                await viewModel.previousWord()
-                            }
-                        },
-                        onTap: {
-                            viewModel.toggleFlip()
-                        },
-                        onSwipeUp: {
-                            Task {
-                                await handleSwipeUp()
-                            }
-                        },
-                        onPlayAudio: {
-                            viewModel.playWordAudio()
-                        }
+    private func mainContent(geometry: GeometryProxy) -> some View {
+        let isSmallScreen = geometry.size.height < 700
+
+        return VStack(spacing: 0) {
+            headerView
+                .zIndex(1.0)
+                .padding(.top, isSmallScreen ? 0 : 10)
+
+            Spacer(minLength: isSmallScreen ? 10 : 20)
+
+            flashcardArea(geometry: geometry, isSmallScreen: isSmallScreen)
+
+            Spacer(minLength: isSmallScreen ? 10 : 30)
+
+            bottomSection(isSmallScreen: isSmallScreen)
+        }
+        .padding(AppSpacing.lg)
+        .frame(width: geometry.size.width, height: geometry.size.height)
+    }
+
+    // MARK: - Flashcard Area
+
+    @ViewBuilder
+    private func flashcardArea(geometry: GeometryProxy, isSmallScreen: Bool) -> some View {
+        if let word = viewModel.currentWord {
+            SwipeableCardStack(
+                currentCard: FlashcardCardData(
+                    word: word.word.capitalized,
+                    level: word.level,
+                    translation: word.turkishTranslation,
+                    definition: word.definition,
+                    photo: viewModel.currentPhoto,
+                    isLoadingPhoto: viewModel.isLoadingPhoto,
+                    examples: viewModel.exampleSentences,
+                    synonyms: word.synonymsList,
+                    antonyms: word.antonymsList,
+                    collocations: word.collocationsList,
+                    isFlipped: viewModel.isFlipped
+                ),
+                nextCard: viewModel.nextWordPreview.map { next in
+                    FlashcardCardData(
+                        word: next.word.capitalized,
+                        level: next.level,
+                        translation: next.turkishTranslation,
+                        definition: next.definition,
+                        photo: viewModel.nextWordPreviewPhoto,
+                        isLoadingPhoto: false,
+                        examples: [],
+                        synonyms: next.synonymsList,
+                        antonyms: next.antonymsList,
+                        collocations: next.collocationsList,
+                        isFlipped: false
                     )
-                    // Limit card height on massive screens so it doesn't look stretched
-                    .frame(maxHeight: isSmallScreen ? .infinity : geometry.size.height * 0.65)
-                    
-                } else {
-                    // Loading initial word
-                    ProgressView("Loading word...")
-                        .font(AppTypography.bodyText)
-                        .foregroundColor(.textSecondary)
-                        .frame(maxHeight: .infinity)
-                }
-
-                // Dynamic spacer: pushes footer to bottom
-                Spacer(minLength: isSmallScreen ? 10 : 30)
-
-                // Bottom section
-                VStack(spacing: isSmallScreen ? 4 : 16) { // More space between hint and progress on big screens
-                    // Hint
-                    hintView
-
-                    // Progress bar
-                    ProgressBarView(
-                        current: viewModel.knownWordsCount,
-                        total: viewModel.totalWordsCount,
-                        showAnimation: false
+                },
+                previousCard: viewModel.previousWordPreview.map { prev in
+                    FlashcardCardData(
+                        word: prev.word.capitalized,
+                        level: prev.level,
+                        translation: prev.turkishTranslation,
+                        definition: prev.definition,
+                        photo: viewModel.previousWordPreviewPhoto,
+                        isLoadingPhoto: false,
+                        examples: [],
+                        synonyms: prev.synonymsList,
+                        antonyms: prev.antonymsList,
+                        collocations: prev.collocationsList,
+                        isFlipped: false
                     )
-                }
-                .padding(.bottom, isSmallScreen ? 8 : 20) // Extra bottom padding on safe area for big screens
-            }
-            .padding(AppSpacing.lg)
-            .frame(width: geometry.size.width, height: geometry.size.height)
-            .overlay(
-                // Translation Input Modal (full-screen overlay)
-                Group {
-                    if viewModel.showTranslationInput {
-                        TranslationInputOverlay(
-                            userInput: $viewModel.userTranslationInput,
-                            validationState: viewModel.translationValidationState,
-                            validationResult: viewModel.translationValidationResult,
-                            onSubmit: {
-                                Task {
-                                    await viewModel.submitTranslation()
-                                }
-                            },
-                            onClear: {
-                                viewModel.clearTranslationInput()
-                            },
-                            onHide: {
-                                viewModel.hideTranslationInputField()
-                            },
-                            userStartedTyping: {
-                                viewModel.userStartedTypingTranslation()
-                            }
-                        )
-                        .transition(.asymmetric(
-                            insertion: .scale(scale: 0.8).combined(with: .opacity),
-                            removal: .scale(scale: 0.9).combined(with: .opacity)
-                        ))
-                        .zIndex(1000)
+                },
+                onSwipeLeft: {
+                    Task {
+                        await viewModel.nextWord()
                     }
+                },
+                onSwipeRight: {
+                    Task {
+                        await viewModel.previousWord()
+                    }
+                },
+                onTap: {
+                    viewModel.toggleFlip()
+                },
+                onSwipeUp: {
+                    Task {
+                        await handleSwipeUp()
+                    }
+                },
+                onPlayAudio: {
+                    viewModel.playWordAudio()
                 }
             )
-            .overlay(
-                // Success Animation
-                Group {
-                    if viewModel.showProgressAnimation {
-                        SuccessAnimationView()
-                            .position(
-                                x: geometry.size.width / 2,
-                                y: geometry.size.height * 0.8
-                            )
-                            .transition(.opacity)
+            .frame(maxHeight: isSmallScreen ? .infinity : geometry.size.height * 0.65)
+        } else {
+            ProgressView("Loading word...")
+                .font(AppTypography.bodyText)
+                .foregroundColor(.textSecondary)
+                .frame(maxHeight: .infinity)
+        }
+    }
+
+    // MARK: - Bottom Section
+
+    private func bottomSection(isSmallScreen: Bool) -> some View {
+        VStack(spacing: isSmallScreen ? 4 : 16) {
+            hintView
+
+            ProgressBarView(
+                current: viewModel.knownWordsCount,
+                total: viewModel.totalWordsCount,
+                showAnimation: false
+            )
+        }
+        .padding(.bottom, isSmallScreen ? 8 : 20)
+    }
+
+    // MARK: - Overlays Container
+
+    @ViewBuilder
+    private func overlaysContainer(geometry: GeometryProxy) -> some View {
+        translationInputOverlay
+        successAnimationOverlay(geometry: geometry)
+        dailyLimitAlertOverlay
+        levelRestrictionAlertOverlay
+    }
+
+    // MARK: - Individual Overlays
+
+    @ViewBuilder
+    private var translationInputOverlay: some View {
+        if viewModel.showTranslationInput {
+            TranslationInputOverlay(
+                userInput: $viewModel.userTranslationInput,
+                validationState: viewModel.translationValidationState,
+                validationResult: viewModel.translationValidationResult,
+                onSubmit: {
+                    Task {
+                        await viewModel.submitTranslation()
                     }
+                },
+                onClear: {
+                    viewModel.clearTranslationInput()
+                },
+                onHide: {
+                    viewModel.hideTranslationInputField()
+                },
+                userStartedTyping: {
+                    viewModel.userStartedTypingTranslation()
                 }
             )
-            .overlay(
-                // Daily Limit Alert
-                Group {
-                    if viewModel.showDailyLimitAlert {
-                        DailyLimitExceededView(isPresented: Binding(
-                            get: { viewModel.showDailyLimitAlert },
-                            set: { viewModel.showDailyLimitAlert = $0 }
-                        ))
-                        .transition(.asymmetric(
-                            insertion: .scale(scale: 0.8).combined(with: .opacity),
-                            removal: .scale(scale: 0.9).combined(with: .opacity)
-                        ))
-                        .zIndex(1000)
-                    }
-                }
-            )
+            .transition(.asymmetric(
+                insertion: .scale(scale: 0.8).combined(with: .opacity),
+                removal: .scale(scale: 0.9).combined(with: .opacity)
+            ))
+            .zIndex(1000)
+        }
+    }
+
+    @ViewBuilder
+    private func successAnimationOverlay(geometry: GeometryProxy) -> some View {
+        if viewModel.showProgressAnimation {
+            SuccessAnimationView()
+                .position(
+                    x: geometry.size.width / 2,
+                    y: geometry.size.height * 0.8
+                )
+                .transition(.opacity)
+        }
+    }
+
+    @ViewBuilder
+    private var dailyLimitAlertOverlay: some View {
+        if viewModel.showDailyLimitAlert {
+            DailyLimitExceededView(isPresented: Binding(
+                get: { viewModel.showDailyLimitAlert },
+                set: { viewModel.showDailyLimitAlert = $0 }
+            ))
+            .transition(.asymmetric(
+                insertion: .scale(scale: 0.8).combined(with: .opacity),
+                removal: .scale(scale: 0.9).combined(with: .opacity)
+            ))
+            .zIndex(1000)
+        }
+    }
+
+    @ViewBuilder
+    private var levelRestrictionAlertOverlay: some View {
+        if viewModel.showLevelRestrictionAlert {
+            LevelRestrictionView(isPresented: $viewModel.showLevelRestrictionAlert, blockedLevel: getBlockedLevel())
+                .transition(.asymmetric(
+                    insertion: .scale(scale: 0.8).combined(with: .opacity),
+                    removal: .scale(scale: 0.9).combined(with: .opacity)
+                ))
+                .zIndex(1000)
         }
     }
 
@@ -351,6 +381,26 @@ struct FlashcardContentView: View {
         } else {
             viewModel.showTranslationInputField()
         }
+    }
+
+    private func getBlockedLevel() -> String {
+        // Get the current unlocked levels
+        let unlockedLevels = SubscriptionManager.shared.getUnlockedLevels()
+
+        // If all levels are unlocked, return empty
+        if unlockedLevels.count >= 4 { // A1, A2, B1, B2
+            return ""
+        }
+
+        // Find the next locked level
+        let allLevels = ["A1", "A2", "B1", "B2"]
+        for level in allLevels {
+            if !unlockedLevels.contains(level) {
+                return level
+            }
+        }
+
+        return "B2" // Default fallback
     }
 
     private var hintView: some View {

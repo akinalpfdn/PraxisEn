@@ -23,14 +23,23 @@ class SubscriptionManager: ObservableObject {
     // MARK: - Private Properties
     @Published private var userSettings: UserSettings?
     private var modelContext: ModelContext?
+    private var expirationCheckTimer: Timer?
 
     // MARK: - Initialization
-    private init() {}
+    private init() {
+        startExpirationCheckTimer()
+    }
+
+    deinit {
+        expirationCheckTimer?.invalidate()
+    }
 
     // MARK: - Configuration
     func configure(with modelContext: ModelContext) {
         self.modelContext = modelContext
         loadUserSettings()
+        // Check for daily reset on app launch
+        updateDailySwipeCount()
     }
 
     // MARK: - User Settings Management
@@ -117,15 +126,24 @@ class SubscriptionManager: ObservableObject {
 
     /// Returns true if the user can make another swipe (card advance)
     func canMakeSwipe() -> Bool {
-        guard let settings = userSettings else { return false }
+        guard let settings = userSettings else {
+            print("❌ canMakeSwipe: No user settings found")
+            return false
+        }
+
+        // First check if we need to reset the daily counter (new day)
+        updateDailySwipeCount()
 
         // Premium users have unlimited swipes
         if settings.subscriptionTier == .premium && settings.subscriptionIsActive {
+            print("✅ canMakeSwipe: Premium user with active subscription")
             return true
         }
 
         // Free users are limited to 30 swipes per day
-        return settings.dailySwipesUsed < freeTierSwipeLimit
+        let canSwipe = settings.dailySwipesUsed < freeTierSwipeLimit
+        print("🎯 canMakeSwipe: Free user - \(settings.dailySwipesUsed)/\(freeTierSwipeLimit) used, can swipe: \(canSwipe)")
+        return canSwipe
     }
 
     /// Records a swipe and updates daily count
@@ -153,6 +171,7 @@ class SubscriptionManager: ObservableObject {
 
         // Check if we need to reset the daily counter (new day)
         if !calendar.isDate(settings.lastSwipeResetDate, inSameDayAs: now) {
+            print("🔄 Daily swipe reset triggered - was \(settings.dailySwipesUsed), now 0")
             settings.dailySwipesUsed = 0
             settings.lastSwipeResetDate = now
             settings.updatedAt = Date()
@@ -163,6 +182,8 @@ class SubscriptionManager: ObservableObject {
         DispatchQueue.main.async {
             self.dailySwipesRemaining = max(0, self.freeTierSwipeLimit - settings.dailySwipesUsed)
         }
+
+        print("📊 Daily swipe status: \(settings.dailySwipesUsed)/\(freeTierSwipeLimit) used")
     }
 
     /// Returns the current daily swipe usage information
@@ -207,6 +228,13 @@ class SubscriptionManager: ObservableObject {
         settings.updatedAt = Date()
 
         saveUserSettings()
+
+        // Post notification for UI components to react
+        NotificationCenter.default.post(
+            name: .subscriptionDidDeactivate,
+            object: nil,
+            userInfo: ["previousTier": "premium"]
+        )
     }
 
     /// Refreshes subscription status (call this on app launch)
@@ -216,12 +244,92 @@ class SubscriptionManager: ObservableObject {
         // Check if subscription has expired
         if let expirationDate = settings.subscriptionExpirationDate {
             if expirationDate < Date() {
-                deactivatePremiumSubscription()
+                handleSubscriptionExpiration()
                 return
             }
         }
 
         updatePublishedProperties()
+    }
+
+    /// Handles subscription expiration with graceful degradation
+    private func handleSubscriptionExpiration() {
+        guard let settings = userSettings else { return }
+
+        print("🔄 Subscription expired, deactivating premium features")
+        deactivatePremiumSubscription()
+
+        // Post notification for UI components to react
+        NotificationCenter.default.post(
+            name: .subscriptionDidExpire,
+            object: nil,
+            userInfo: ["previousExpirationDate": settings.subscriptionExpirationDate as Any]
+        )
+    }
+
+    /// Starts a timer to periodically check for subscription expiration
+    private func startExpirationCheckTimer() {
+        // Check every hour for subscription expiration and warnings
+        expirationCheckTimer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
+            self?.checkForExpiration()
+            self?.checkForExpirationWarning()
+        }
+    }
+
+    /// Checks if subscription has expired and handles it
+    private func checkForExpiration() {
+        guard let settings = userSettings,
+              settings.subscriptionIsActive,
+              let expirationDate = settings.subscriptionExpirationDate else { return }
+
+        if expirationDate <= Date() {
+            handleSubscriptionExpiration()
+        }
+    }
+
+    /// Checks if subscription is expiring soon and posts warning notification
+    private func checkForExpirationWarning() {
+        guard let settings = userSettings,
+              settings.subscriptionIsActive,
+              let expirationDate = settings.subscriptionExpirationDate,
+              isSubscriptionExpiringSoon() else { return }
+
+        // Only post warning once per day
+        let lastWarningDate = UserDefaults.standard.object(forKey: "lastExpirationWarningDate") as? Date ?? Date.distantPast
+        let now = Date()
+
+        if !Calendar.current.isDate(lastWarningDate, inSameDayAs: now) {
+            UserDefaults.standard.set(now, forKey: "lastExpirationWarningDate")
+
+            NotificationCenter.default.post(
+                name: .subscriptionWillExpire,
+                object: nil,
+                userInfo: [
+                    "expirationDate": expirationDate,
+                    "daysUntilExpiration": getDaysUntilExpiration() ?? 0
+                ]
+            )
+            print("⚠️ Subscription expiring soon warning posted")
+        }
+    }
+
+    /// Checks if subscription is expiring soon (within 3 days)
+    func isSubscriptionExpiringSoon() -> Bool {
+        guard let settings = userSettings,
+              settings.subscriptionIsActive,
+              let expirationDate = settings.subscriptionExpirationDate else { return false }
+
+        let threeDaysFromNow = Calendar.current.date(byAdding: .day, value: 3, to: Date()) ?? Date()
+        return expirationDate <= threeDaysFromNow && expirationDate > Date()
+    }
+
+    /// Returns days until expiration
+    func getDaysUntilExpiration() -> Int? {
+        guard let settings = userSettings,
+              settings.subscriptionIsActive,
+              let expirationDate = settings.subscriptionExpirationDate else { return nil }
+
+        return Calendar.current.dateComponents([.day], from: Date(), to: expirationDate).day
     }
 
     /// Returns subscription information for UI display
