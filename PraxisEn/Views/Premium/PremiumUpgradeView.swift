@@ -49,7 +49,6 @@ struct PremiumUpgradeView: View {
                 await loadProducts()
             }
         }
-        .presentationDetents([.large])
     }
 
     // MARK: - Header Section

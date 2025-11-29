@@ -42,7 +42,7 @@ struct SettingsView: View {
                 Text("This will permanently delete all your learning progress:\n\n• Reset all word learning status\n• Clear learned words history\n• Restart from A1 in progressive mode\n\nThis action cannot be undone.")
             }
         }
-        .sheet(isPresented: $showUpgradeView) {
+        .fullScreenCover(isPresented: $showUpgradeView) {
             PremiumUpgradeView()
         }
     }

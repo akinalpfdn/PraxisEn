@@ -20,7 +20,6 @@ struct ContentView: View {
     @State private var viewModel: FlashcardViewModel?
     @State private var navigationPath: [NavigationDestination] = []
     @State private var isDatabaseReady: Bool = false
-
     var body: some View {
         NavigationStack(path: $navigationPath) {
             ZStack {
@@ -89,19 +88,11 @@ struct ContentView: View {
             // Load user settings first
             await vm.loadUserSettings()
 
+
             // Load first word using spaced repetition with settings
             await vm.loadNextWord()
             await vm.updateKnownWordsCount()
             await vm.updateTotalWordsCount()
-        }
-        .sheet(isPresented: Binding(
-            get: { viewModel?.showDailyLimitAlert ?? false },
-            set: { viewModel?.showDailyLimitAlert = $0 }
-        )) {
-            DailyLimitExceededView(isPresented: Binding(
-                get: { viewModel?.showDailyLimitAlert ?? false },
-                set: { viewModel?.showDailyLimitAlert = $0 }
-            ))
         }
 
     }
@@ -268,6 +259,22 @@ struct FlashcardContentView: View {
                                 y: geometry.size.height * 0.8
                             )
                             .transition(.opacity)
+                    }
+                }
+            )
+            .overlay(
+                // Daily Limit Alert
+                Group {
+                    if viewModel.showDailyLimitAlert {
+                        DailyLimitExceededView(isPresented: Binding(
+                            get: { viewModel.showDailyLimitAlert },
+                            set: { viewModel.showDailyLimitAlert = $0 }
+                        ))
+                        .transition(.asymmetric(
+                            insertion: .scale(scale: 0.8).combined(with: .opacity),
+                            removal: .scale(scale: 0.9).combined(with: .opacity)
+                        ))
+                        .zIndex(1000)
                     }
                 }
             )

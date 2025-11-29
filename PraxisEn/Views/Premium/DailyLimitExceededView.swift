@@ -5,7 +5,7 @@ struct DailyLimitExceededView: View {
     @State private var showUpgradeView = false
 
     var body: some View {
-        NavigationView {
+        ZStack {
             VStack(spacing: AppSpacing.xl) {
                 Spacer()
 
@@ -86,10 +86,9 @@ struct DailyLimitExceededView: View {
                 }
             }
         }
-        .sheet(isPresented: $showUpgradeView) {
+        .fullScreenCover(isPresented: $showUpgradeView) {
             PremiumUpgradeView()
         }
-        .presentationDetents([.medium])
     }
 
     // MARK: - Limit Info Card

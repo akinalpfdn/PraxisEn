@@ -176,7 +176,7 @@ class FlashcardViewModel: ObservableObject {
         return true
     }
 
-    /// Go to next word (swipe right)
+        /// Go to next word (swipe right)
     func nextWord() async {
         // Check swipe limit for free users
         guard canMakeCardAdvance() else { return }
