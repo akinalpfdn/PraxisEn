@@ -124,10 +124,26 @@ class FlashcardViewModel: ObservableObject {
 
     /// Handle case when no more words are available in target levels
     private func handleNoMoreWords(settings: UserSettings) async {
+        let subscriptionManager = SubscriptionManager.shared
+
+        // Check if user has completed all available free levels but isn't premium
+        if !subscriptionManager.isPremiumActive {
+            let unlockedLevels = subscriptionManager.getUnlockedLevels() // Should be ["A1", "A2", "B1"] for free users
+            let completedLevels = ["A1", "A2", "B1"].filter { settings.isLevelCompleted[$0] == true }
+
+            // If all free levels are completed, show level restriction alert for B2
+            if completedLevels.count == unlockedLevels.count && completedLevels.count >= 3 {
+                print("🎯 All free levels completed, showing level restriction alert for B2")
+                showLevelRestrictionAlert = true
+                return
+            }
+        }
+
+        // Default behavior - just log the situation
         if settings.allLevelsCompleted {
-            // Could show completion UI or message
+            print("🎉 All levels completed including B2!")
         } else {
-            // Could try to advance level or show message
+            print("📚 No more words available in current target levels")
         }
     }
 

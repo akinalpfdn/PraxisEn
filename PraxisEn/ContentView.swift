@@ -384,23 +384,9 @@ struct FlashcardContentView: View {
     }
 
     private func getBlockedLevel() -> String {
-        // Get the current unlocked levels
-        let unlockedLevels = SubscriptionManager.shared.getUnlockedLevels()
-
-        // If all levels are unlocked, return empty
-        if unlockedLevels.count >= 4 { // A1, A2, B1, B2
-            return ""
-        }
-
-        // Find the next locked level
-        let allLevels = ["A1", "A2", "B1", "B2"]
-        for level in allLevels {
-            if !unlockedLevels.contains(level) {
-                return level
-            }
-        }
-
-        return "B2" // Default fallback
+        // This is only shown when user has completed all free levels
+        // So the blocked level is always B2
+        return "B2"
     }
 
     private var hintView: some View {
