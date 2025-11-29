@@ -87,13 +87,9 @@ class FlashcardViewModel: ObservableObject {
     /// Load next word using spaced repetition algorithm with ODR-aware content loading
     func loadNextWord() async {
         guard let settings = userSettings else {
-            print("❌ No user settings found - cannot load next word")
             logger.error("No user settings found - cannot load next word")
             return
         }
-
-        print("🔍 Starting loadNextWord()")
-        print("🔍 ODR Available: \(ODRManager.shared.checkFullContentAvailability())")
 
         // Use SpacedRepetitionManager with ODR-aware content loading
         guard let word = await SpacedRepetitionManager.selectNextWordWithSettings(
@@ -101,13 +97,10 @@ class FlashcardViewModel: ObservableObject {
             excluding: Array(wordHistory.suffix(10)),
             settings: settings
         ) else {
-            print("❌ No words found - calling handleNoMoreWords")
             // Handle no more words case
             await handleNoMoreWords(settings: settings)
             return
         }
-
-        print("✅ Selected word: \(word.word)")
 
         currentWord = word
         addToHistory(word)
@@ -125,15 +118,9 @@ class FlashcardViewModel: ObservableObject {
 
     /// Handle case when no more words are available in target levels
     private func handleNoMoreWords(settings: UserSettings) async {
-        print("🚨 handleNoMoreWords called!")
-        print("🚨 All levels completed: \(settings.allLevelsCompleted)")
-        print("🚨 Target levels: \(settings.getTargetLevels())")
-
         if settings.allLevelsCompleted {
-            print("🎉 All levels completed! No more new words available.")
             // Could show completion UI or message
         } else {
-            print("📚 No more words available in current level(s)")
             // Could try to advance level or show message
         }
     }

@@ -65,15 +65,11 @@ struct ContentView: View {
             }
         }
         .task {
-            print("🚀 ContentView.task started")
-
             // Wait for database to be ready before proceeding
-            print("🚀 Waiting for database setup...")
             while !DatabaseManager.shared.isDatabaseSetupComplete() {
                 try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
             }
 
-            print("🚀 Database setup complete, setting isDatabaseReady = true")
             // Small delay to ensure all database operations are complete
             try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
 
@@ -81,22 +77,17 @@ struct ContentView: View {
                 isDatabaseReady = true
             }
 
-            print("🚀 Initializing ViewModel")
             // Initialize ViewModel with correct context
             let vm = FlashcardViewModel(modelContext: modelContext)
             viewModel = vm
 
-            print("🚀 Loading user settings")
             // Load user settings first
             await vm.loadUserSettings()
 
-            print("🚀 Loading first word")
             // Load first word using spaced repetition with settings
             await vm.loadNextWord()
             await vm.updateKnownWordsCount()
             await vm.updateTotalWordsCount()
-
-            print("🚀 ContentView.task completed")
         }
 
     }

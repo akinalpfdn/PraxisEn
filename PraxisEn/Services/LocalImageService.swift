@@ -35,12 +35,9 @@ actor LocalImageService {
 
         for filename in possibleNames {
             if let image = loadImageFromBundle(filename: filename) {
-                print("📷 [LocalImageService] Found local image: \(filename) for word: '\(word)'")
                 return image
             }
         }
-
-        print("🔍 [LocalImageService] No local image found for word: '\(word)'")
         return nil
     }
 

@@ -10,13 +10,16 @@ class ODRManager: ObservableObject {
 
     // MARK: - Published Properties
 
-    @Published private var isDownloadComplete: Bool = false
-    @Published private var isDownloading: Bool = false
+    @Published private(set) var isDownloadComplete: Bool = false
+    @Published private(set) var isDownloading: Bool = false
 
     // MARK: - Private Properties
 
     private let logger = Logger(subsystem: "PraxisEn", category: "ODR")
     private let fullContentTag = "all_media"
+    
+    // Fixed typo: NSBundleResourceRequest (was NSS...)
+    private var resourceRequest: NSBundleResourceRequest?
 
     // Seed words configuration - these are available immediately
     private let seedWords: Set<String> = [
@@ -61,12 +64,12 @@ class ODRManager: ObservableObject {
         isDownloading = true
 
         do {
-            // Note: This is a placeholder for actual ODR implementation
-            // In a real implementation, you would use NSSBundleResourceRequest
-            // For now, we'll simulate the download process
+            // Fixed typo: NSBundleResourceRequest
+            let request = NSBundleResourceRequest(tags: [fullContentTag])
+            resourceRequest = request
 
-            // Simulate download time
-            try await simulateDownload()
+            // Begin accessing the ODR resources
+            try await request.beginAccessingResources()
 
             isDownloadComplete = true
             isDownloading = false
@@ -74,19 +77,29 @@ class ODRManager: ObservableObject {
 
         } catch {
             isDownloading = false
+            resourceRequest = nil
             logger.error("Full content download failed: \(error.localizedDescription)")
             throw error
         }
     }
 
     /// Check if full content is available
-    func checkFullContentAvailability() -> Bool {
-        // Note: This is a placeholder for actual ODR availability check
-        // In a real implementation, you would check NSSBundleResourceRequest.condition == .loaded
-        // For now, we'll check if we can access ODR-tagged resources
-
-        // Placeholder implementation - replace with actual ODR check
-        return Bundle.main.path(forResource: "hello", ofType: "mp3") != nil
+    /// Uses conditionallyBeginAccessingResources to check without downloading
+    func checkFullContentAvailability() async -> Bool {
+        let request = NSBundleResourceRequest(tags: [fullContentTag])
+        
+        return await withCheckedContinuation { continuation in
+            request.conditionallyBeginAccessingResources { available in
+                if available {
+                    // Important: If available, we must keep the request alive
+                    // so the system doesn't purge the resources immediately.
+                    Task { @MainActor in
+                        self.resourceRequest = request
+                    }
+                }
+                continuation.resume(returning: available)
+            }
+        }
     }
 
     /// Check if a word is a seed word (available immediately)
@@ -106,17 +119,6 @@ class ODRManager: ObservableObject {
     private func normalizeWord(_ word: String) -> String {
         return word.lowercased()
             .replacingOccurrences(of: "[^a-zA-Z]", with: "", options: .regularExpression)
-    }
-
-    /// Simulate download process for testing
-    private func simulateDownload() async throws {
-        logger.info("Simulating full content download...")
-
-        // Simulate download progress
-        for i in 1...10 {
-            logger.info("Download progress: \(i * 10)%")
-            try await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
-        }
     }
 }
 

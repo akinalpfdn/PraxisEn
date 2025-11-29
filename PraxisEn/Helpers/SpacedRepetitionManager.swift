@@ -141,31 +141,21 @@ class SpacedRepetitionManager {
         excluding recentWords: [VocabularyWord],
         settings: UserSettings
     ) async -> VocabularyWord? {
-        print("🔄 SpacedRepetitionManager.selectNextWordWithSettings called")
-
         // Check if ODR content is available
         let isODRAvailable = await ODRManager.shared.checkFullContentAvailability()
-        print("🔄 ODR Available: \(isODRAvailable)")
 
         if !isODRAvailable {
-            print("🔄 Using seed word selection")
             // ODR not available - prioritize seed words
             return await selectSeedWordWithSettings(from: context, excluding: recentWords, settings: settings)
         }
 
-        print("🔄 Using full vocabulary selection")
         // ODR available - use normal spaced repetition logic
         let stats = await getReviewStats(from: context)
-        print("🔄 Stats: total=\(stats.totalWords), known=\(stats.knownWords), inReview=\(stats.wordsInReview)")
-
         let shouldShowNew = shouldSelectNewWord(stats: stats)
-        print("🔄 Should show new word: \(shouldShowNew)")
 
         if shouldShowNew {
-            print("🔄 Selecting new word")
             return await selectNewWordWithSettings(from: context, excluding: recentWords, settings: settings)
         } else {
-            print("🔄 Selecting review word")
             return await selectReviewWordWithSettings(from: context, excluding: recentWords, settings: settings)
         }
     }

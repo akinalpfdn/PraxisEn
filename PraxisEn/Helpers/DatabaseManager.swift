@@ -111,7 +111,6 @@ class DatabaseManager {
         let existingCount = try modelContext.fetchCount(descriptor)
 
         if existingCount > 0 {
-            print("ℹ️  Vocabulary already imported (\(existingCount) words)")
             return existingCount
         }
 
@@ -163,7 +162,6 @@ class DatabaseManager {
         // Final save
         try modelContext.save()
 
-        print("✅ Imported \(importedCount) vocabulary words to SwiftData")
         return importedCount
     }
 
