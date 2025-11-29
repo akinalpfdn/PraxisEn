@@ -14,7 +14,7 @@ class FlashcardViewModel: ObservableObject {
     /// Is card flipped (showing back side)
     @Published var isFlipped: Bool = false
 
-    /// Example sentences for current word (max 3)
+    /// Example sentences for current word (limited by subscription)
     @Published var exampleSentences: [SentencePair] = []
 
     /// Photo for current word
@@ -49,6 +49,9 @@ class FlashcardViewModel: ObservableObject {
 
     /// Show progress animation (+1 popup)
     @Published var showProgressAnimation: Bool = false
+
+    /// Show daily limit alert
+    @Published var showDailyLimitAlert: Bool = false
 
     // MARK: - Translation Input Properties
 
@@ -164,8 +167,23 @@ class FlashcardViewModel: ObservableObject {
     }
 
     
+    /// Check if user can make another card advance
+    private func canMakeCardAdvance() -> Bool {
+        guard SubscriptionManager.shared.canMakeSwipe() else {
+            showDailyLimitAlert = true
+            return false
+        }
+        return true
+    }
+
     /// Go to next word (swipe right)
     func nextWord() async {
+        // Check swipe limit for free users
+        guard canMakeCardAdvance() else { return }
+
+        // Record the swipe
+        SubscriptionManager.shared.recordSwipe()
+
         // Increment repetition count for current word
         if let word = currentWord, !word.isKnown {
             word.incrementRepetition()
@@ -281,7 +299,7 @@ class FlashcardViewModel: ObservableObject {
             let filtered = sentences
                 .filter { $0.englishText.lowercased().contains(word.word.lowercased()) }
                 .sorted { $0.difficultyTier < $1.difficultyTier } // Easier first
-                .prefix(10)
+                .prefix(SubscriptionManager.shared.getMaxSentencesPerWord())
 
             exampleSentences = Array(filtered)
 
@@ -341,7 +359,13 @@ class FlashcardViewModel: ObservableObject {
 
     /// Mark current word as known (swipe up gesture)
     func markCurrentWordAsKnown() async {
+        // Check swipe limit for free users
+        guard canMakeCardAdvance() else { return }
+
         guard let word = currentWord else { return }
+
+        // Record the swipe
+        SubscriptionManager.shared.recordSwipe()
 
         // Mark as known
         word.markAsKnown()

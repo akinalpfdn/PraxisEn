@@ -57,6 +57,9 @@ final class VocabularyWord {
     /// User marked this word as "I know this"
     var isKnown: Bool = false
 
+    /// Date when the user marked this word as learned (for subscription limits)
+    var learnedAt: Date?
+
     
     /// Consecutive successful reviews
     var repetitions: Int = 0
@@ -183,12 +186,14 @@ final class VocabularyWord {
     /// Mark word as known (exclude from rotation)
     func markAsKnown() {
         isKnown = true
+        learnedAt = Date()  // Record when word was learned
         repetitions = 0  // Reset to remove from review groups
     }
 
     /// Reset known status (return to unknown)
     func resetKnownStatus() {
         isKnown = false
+        learnedAt = nil  // Clear learned timestamp
         repetitions = 0
     }
 }

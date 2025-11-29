@@ -187,16 +187,25 @@ final class UserSettings {
 
     /// Gets target levels for word selection based on current mode and progress
     func getTargetLevels() -> [String] {
+        // Get levels based on subscription status
+        let unlockedLevels = SubscriptionManager.shared.getUnlockedLevels()
+
         switch wordSelectionMode {
         case .progressiveByLevel:
-            if isLevelCompleted[currentLevel]! {
-                // If current level is completed, find next available level
-                return findAvailableLevels()
+            // For progressive mode, check if current level is unlocked and completed
+            if unlockedLevels.contains(currentLevel) {
+                if isLevelCompleted[currentLevel]! {
+                    // If current level is completed, find next available unlocked level
+                    return findAvailableUnlockedLevels(from: unlockedLevels)
+                } else {
+                    return [currentLevel]
+                }
             } else {
-                return [currentLevel]
+                // Current level is not unlocked, find the first unlocked level
+                return unlockedLevels.isEmpty ? [] : [unlockedLevels.first!]
             }
         case .randomAllLevels:
-            return ["A1", "A2", "B1", "B2"]
+            return unlockedLevels
         }
     }
 
@@ -204,6 +213,11 @@ final class UserSettings {
     private func findAvailableLevels() -> [String] {
         let allLevels = ["A1", "A2", "B1", "B2"]
         return allLevels.filter { !isLevelCompleted[$0]! }
+    }
+
+    /// Finds available unlocked levels that aren't completed
+    private func findAvailableUnlockedLevels(from unlockedLevels: [String]) -> [String] {
+        return unlockedLevels.filter { !isLevelCompleted[$0]! }
     }
 }
 
