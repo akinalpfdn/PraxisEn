@@ -1,6 +1,6 @@
 import Foundation
 import StoreKit
-
+internal import Combine
 /// Handles in-app purchases using StoreKit 2
 @MainActor
 class PurchaseManager: ObservableObject {
@@ -54,7 +54,7 @@ class PurchaseManager: ObservableObject {
 
     /// Purchases the premium subscription
     func purchasePremium(_ product: Product) async throws -> Transaction {
-        guard !product.isSubscription else {
+        guard product.type == .autoRenewable else {
             throw PurchaseError.invalidProduct
         }
 
@@ -112,14 +112,11 @@ class PurchaseManager: ObservableObject {
         do {
             purchaseState = .restoring
 
-            // Get all recent transactions
-            let result = try await Transaction.currentEntitlements()
-
             var hasActiveSubscription = false
             var subscriptionExpiration: Date?
 
-            for transaction in result {
-                let verifiedTransaction = try checkVerified(transaction)
+            for await result in Transaction.currentEntitlements {
+                let verifiedTransaction = try checkVerified(result)
 
                 // Check for premium subscription
                 if verifiedTransaction.productID == "praxisen_premium_monthly" {
@@ -159,13 +156,11 @@ class PurchaseManager: ObservableObject {
     /// Checks current subscription status
     func checkSubscriptionStatus() async {
         do {
-            let result = try await Transaction.currentEntitlements()
-
             var hasActiveSubscription = false
             var subscriptionExpiration: Date?
 
-            for transaction in result {
-                let verifiedTransaction = try checkVerified(transaction)
+            for await result in Transaction.currentEntitlements {
+                let verifiedTransaction = try checkVerified(result)
 
                 if verifiedTransaction.productID == "praxisen_premium_monthly" {
                     if verifiedTransaction.revocationDate == nil {
@@ -185,23 +180,21 @@ class PurchaseManager: ObservableObject {
                 )
                 print("✅ Active subscription verified")
             } else {
-                await SubscriptionManager.shared.refreshSubscriptionStatus()
+                SubscriptionManager.shared.refreshSubscriptionStatus()
                 print("ℹ️ No active subscription")
             }
 
         } catch {
             print("❌ Subscription status check failed: \(error)")
-            await SubscriptionManager.shared.refreshSubscriptionStatus()
+            SubscriptionManager.shared.refreshSubscriptionStatus()
         }
     }
 
     /// Get subscription renewal information
     func getSubscriptionInfo() async -> SubscriptionStatus? {
         do {
-            let result = try await Transaction.currentEntitlements()
-
-            for transaction in result {
-                let verifiedTransaction = try checkVerified(transaction)
+            for await result in Transaction.currentEntitlements {
+                let verifiedTransaction = try checkVerified(result)
 
                 if verifiedTransaction.productID == "praxisen_premium_monthly" {
                     if verifiedTransaction.revocationDate == nil {
@@ -210,7 +203,7 @@ class PurchaseManager: ObservableObject {
                             isActive: isActive,
                             expirationDate: verifiedTransaction.expirationDate,
                             purchaseDate: verifiedTransaction.purchaseDate,
-                            originalTransactionId: verifiedTransaction.originalID
+                            originalTransactionId: String(verifiedTransaction.originalID)
                         )
                     }
                 }
@@ -225,7 +218,7 @@ class PurchaseManager: ObservableObject {
     // MARK: - Transaction Verification
 
     /// Verifies a transaction result
-    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+    nonisolated private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .unverified:
             throw PurchaseError.verificationFailed
@@ -264,18 +257,18 @@ class PurchaseManager: ObservableObject {
             let isActive = transaction.expirationDate ?? Date.distantFuture > Date()
 
             if isActive {
-                await SubscriptionManager.shared.activatePremiumSubscription(
+                SubscriptionManager.shared.activatePremiumSubscription(
                     startDate: transaction.purchaseDate,
                     expirationDate: transaction.expirationDate
                 )
                 print("✅ Subscription activated/updated")
             } else {
-                await SubscriptionManager.shared.deactivatePremiumSubscription()
+                SubscriptionManager.shared.deactivatePremiumSubscription()
                 print("ℹ️ Subscription expired")
             }
         } else {
             // Subscription was revoked
-            await SubscriptionManager.shared.deactivatePremiumSubscription()
+            SubscriptionManager.shared.deactivatePremiumSubscription()
             print("ℹ️ Subscription revoked")
         }
     }

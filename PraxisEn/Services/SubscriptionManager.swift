@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+internal import Combine
 
 /// Manages subscription state and feature access controls
 class SubscriptionManager: ObservableObject {

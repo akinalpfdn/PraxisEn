@@ -79,7 +79,7 @@ struct ContentView: View {
 
             // Initialize subscription managers
             SubscriptionManager.shared.configure(with: modelContext)
-            await PurchaseManager.shared.loadProducts()
+            try? await PurchaseManager.shared.loadProducts()
             await PurchaseManager.shared.checkSubscriptionStatus()
 
             // Initialize ViewModel with correct context
