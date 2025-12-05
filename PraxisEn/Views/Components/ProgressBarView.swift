@@ -2,14 +2,25 @@ import SwiftUI
 
 struct ProgressBarView: View {
     // MARK: - Properties
-    
+
     let current: Int
     let total: Int
     let showAnimation: Bool
+    let isPremiumUser: Bool
+    let b2WordCount: Int // Number of B2 words (locked for free users)
     
     private var progress: Double {
         guard total > 0 else { return 0 }
         return Double(current) / Double(total)
+    }
+
+    private var lockedProgress: Double {
+        guard total > 0 else { return 0 }
+        if isPremiumUser {
+            return 0 // No locked content for premium users
+        }
+        // Free users: B2 words are locked (gray portion on right side)
+        return Double(b2WordCount) / Double(total)
     }
     
     // MARK: - Body
@@ -53,8 +64,8 @@ struct ProgressBarView: View {
                             RoundedRectangle(cornerRadius: isSmallScreen ? 4 : 8)
                                 .fill(Color.gray.opacity(0.15))
                                 .frame(height: isSmallScreen ? 6 : 12)
-                            
-                            // Progress fill with gradient
+
+                            // Learned words fill (green) - anchored to left
                             RoundedRectangle(cornerRadius: isSmallScreen ? 4 : 8)
                                 .fill(
                                     LinearGradient(
@@ -69,6 +80,30 @@ struct ProgressBarView: View {
                                 .frame(width: barGeometry.size.width * progress, height: isSmallScreen ? 6 : 12)
                                 .animation(.spring(response: 0.6, dampingFraction: 0.7), value: progress)
                         }
+                        .overlay {
+                            // B2 locked words overlay (gray) - positioned on right side
+                            if !isPremiumUser && lockedProgress > 0 {
+                                HStack {
+                                    Spacer()
+                                    RoundedRectangle(cornerRadius: isSmallScreen ? 4 : 8)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [
+                                                    Color.gray.opacity(0.4),
+                                                    Color.gray.opacity(0.6)
+                                                ],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
+                                        )
+                                        .frame(
+                                            width: barGeometry.size.width * lockedProgress,
+                                            height: isSmallScreen ? 6 : 12
+                                        )
+                                        .animation(.spring(response: 0.6, dampingFraction: 0.7), value: lockedProgress)
+                                }
+                            }
+                        }
                     }
                     .frame(height: isSmallScreen ? 6 : 12)
                 }
@@ -79,7 +114,7 @@ struct ProgressBarView: View {
                         .fill(Color.white.opacity(0.9))
                         .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 4)
                 )
-                
+
                 // +1 Animation popup
                 if showAnimation {
                     Text("+1")
@@ -101,25 +136,31 @@ struct ProgressBarView: View {
             .ignoresSafeArea()
 
         VStack(spacing: 30) {
-            // Low progress
+            // Free user - Low progress, B2 words locked
             ProgressBarView(
                 current: 45,
                 total: 3000,
-                showAnimation: false
+                showAnimation: false,
+                isPremiumUser: false,
+                b2WordCount: 800 // Example: 800 B2 words
             )
 
-            // Medium progress
+            // Free user - Medium progress, B2 words locked
             ProgressBarView(
-                current: 850,
+                current: 500,
                 total: 3000,
-                showAnimation: false
+                showAnimation: false,
+                isPremiumUser: false,
+                b2WordCount: 800 // Example: 800 B2 words
             )
 
-            // High progress with animation
+            // Premium user - Full access, no B2 locked
             ProgressBarView(
                 current: 2500,
                 total: 3000,
-                showAnimation: true
+                showAnimation: true,
+                isPremiumUser: true,
+                b2WordCount: 0 // No locked words
             )
         }
         .padding()

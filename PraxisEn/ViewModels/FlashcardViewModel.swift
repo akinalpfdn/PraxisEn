@@ -47,6 +47,9 @@ class FlashcardViewModel: ObservableObject {
     /// Total words count (for progress bar)
     @Published var totalWordsCount: Int = 0
 
+    /// B2 words count (for progress bar gray overlay)
+    @Published var b2WordsCount: Int = 0
+
     /// Show progress animation (+1 popup)
     @Published var showProgressAnimation: Bool = false
 
@@ -421,6 +424,15 @@ class FlashcardViewModel: ObservableObject {
         let descriptor = FetchDescriptor<VocabularyWord>()
         let allWords = (try? modelContext.fetch(descriptor)) ?? []
         totalWordsCount = allWords.count
+    }
+
+    /// Update B2 words count for progress bar gray overlay
+    func updateB2WordsCount() async {
+        let descriptor = FetchDescriptor<VocabularyWord>(
+            predicate: #Predicate { $0.level == "B2" }
+        )
+        let b2Words = (try? modelContext.fetch(descriptor)) ?? []
+        b2WordsCount = b2Words.count
     }
 
     // MARK: - Helper Methods

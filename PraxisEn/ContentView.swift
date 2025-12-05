@@ -217,6 +217,7 @@ struct ContentView: View {
         // Update progress counts (quick operations)
         await vm.updateKnownWordsCount()
         await vm.updateTotalWordsCount()
+        await vm.updateB2WordsCount()
 
         print("✅ Content loading complete")
     }
@@ -367,7 +368,9 @@ struct FlashcardContentView: View {
             ProgressBarView(
                 current: viewModel.knownWordsCount,
                 total: viewModel.totalWordsCount,
-                showAnimation: false
+                showAnimation: false,
+                isPremiumUser: SubscriptionManager.shared.isPremiumActive,
+                b2WordCount: SubscriptionManager.shared.isPremiumActive ? 0 : viewModel.b2WordsCount
             )
         }
         .padding(.bottom, isSmallScreen ? 8 : 20)
@@ -532,6 +535,7 @@ struct FlashcardContentView: View {
         return "B2"
     }
 
+    
     private var hintView: some View {
         VStack(){
             // Tap hint
