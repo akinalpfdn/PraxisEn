@@ -14,7 +14,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: AppSpacing.lg) {
+                VStack( ) {
                     if isLoading {
                         ProgressView("Loading settings...")
                             .font(AppTypography.bodyText)

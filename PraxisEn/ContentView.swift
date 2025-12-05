@@ -19,7 +19,18 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel: FlashcardViewModel?
     @State private var navigationPath: [NavigationDestination] = []
-    @State private var isDatabaseReady: Bool = false
+
+    // Comprehensive loading state management
+    @State private var initializationState: InitializationState = .loading
+    @State private var errorMessage: String?
+
+    enum InitializationState {
+        case loading
+        case databaseSetup
+        case contentLoading
+        case ready
+        case error(String)
+    }
     var body: some View {
         NavigationStack(path: $navigationPath) {
             ZStack {
@@ -27,21 +38,28 @@ struct ContentView: View {
                 Color.creamBackground
                     .ignoresSafeArea()
 
-                if !isDatabaseReady {
-                    // Setting up database
-                    ProgressView("Initializing...")
-                        .font(AppTypography.bodyText)
-                        .foregroundColor(.textSecondary)
-                } else if let viewModel = viewModel {
-                    FlashcardContentView(
-                        viewModel: viewModel,
-                        navigationPath: $navigationPath
-                    )
-                } else {
-                    // Initializing ViewModel
-                    ProgressView("Loading...")
-                        .font(AppTypography.bodyText)
-                        .foregroundColor(.textSecondary)
+                switch initializationState {
+                case .loading:
+                    loadingView("Initializing...")
+
+                case .databaseSetup:
+                    loadingView("Setting up database...")
+
+                case .contentLoading:
+                    loadingView("Loading content...")
+
+                case .ready:
+                    if let viewModel = viewModel {
+                        FlashcardContentView(
+                            viewModel: viewModel,
+                            navigationPath: $navigationPath
+                        )
+                    } else {
+                        errorView("Failed to initialize content")
+                    }
+
+                case .error(let message):
+                    errorView(message)
                 }
             }
             .navigationDestination(for: NavigationDestination.self) { destination in
@@ -51,8 +69,7 @@ struct ContentView: View {
                 case .learnedWords:
                     LearnedWordsView()
                 case .settings:
-                    SettingsView()
-                        .navigationTitle("Settings")
+                    SettingsView() 
                 case .learnedFlashcard(let wordID, let allLearnedWordIDs):
                     let vm = LearnedFlashcardViewModel(
                         modelContext: modelContext,
@@ -64,37 +81,163 @@ struct ContentView: View {
             }
         }
         .task {
-            // Wait for database to be ready before proceeding
-            while !DatabaseManager.shared.isDatabaseSetupComplete() {
-                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-            }
-
-            // Small delay to ensure all database operations are complete
-            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-
-            await MainActor.run {
-                isDatabaseReady = true
-            }
-
-            // Initialize subscription managers
-            SubscriptionManager.shared.configure(with: modelContext)
-            try? await PurchaseManager.shared.loadProducts()
-            await PurchaseManager.shared.checkSubscriptionStatus()
-
-            // Initialize ViewModel with correct context
-            let vm = FlashcardViewModel(modelContext: modelContext)
-            viewModel = vm
-
-            // Load user settings first
-            await vm.loadUserSettings()
-
-
-            // Load first word using spaced repetition with settings
-            await vm.loadNextWord()
-            await vm.updateKnownWordsCount()
-            await vm.updateTotalWordsCount()
+            await initializeApp()
         }
 
+    }
+
+    // MARK: - Loading Views
+
+    private func loadingView(_ message: String) -> some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.2)
+                .tint(.accentOrange)
+
+            Text(message)
+                .font(AppTypography.bodyText)
+                .foregroundColor(.textSecondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+    }
+
+    private func errorView(_ message: String) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 48))
+                .foregroundColor(.error)
+
+            Text("Something went wrong")
+                .font(AppTypography.cardTitle)
+                .foregroundColor(.textPrimary)
+
+            Text(message)
+                .font(AppTypography.bodyText)
+                .foregroundColor(.textSecondary)
+                .multilineTextAlignment(.center)
+
+            Button("Try Again") {
+                Task {
+                    await initializeApp()
+                }
+            }
+            .buttonStyle(PrimaryButtonStyle())
+        }
+        .padding()
+    }
+
+    // MARK: - Initialization Logic
+
+    @MainActor
+    private func initializeApp() async {
+        print("🚀 Starting fast offline initialization...")
+
+        do {
+            // Phase 1: Quick Database Check (should be immediate for offline)
+            initializationState = .databaseSetup
+            print("📁 Checking database...")
+
+            try await setupDatabaseFast()
+
+            // Phase 2: Initialize Services in Background (don't block)
+            print("💳 Initializing services...")
+            await setupServicesFast()
+
+            // Phase 3: Load Content (fast for offline)
+            initializationState = .contentLoading
+            print("📚 Loading content...")
+
+            try await setupContentFast()
+
+            // Phase 4: Ready
+            initializationState = .ready
+            print("✅ Fast initialization complete!")
+
+        } catch {
+            let errorMsg = "Initialization failed: \(error.localizedDescription)"
+            print("❌ \(errorMsg)")
+            errorMessage = errorMsg
+            initializationState = .error(errorMsg)
+        }
+    }
+
+    private func setupDatabaseFast() async throws {
+        // Quick check - if database is ready, proceed immediately
+        if DatabaseManager.shared.isDatabaseSetupComplete() {
+            print("✅ Database ready immediately")
+            return
+        }
+
+        // Only wait if actually needed (should be rare)
+        let timeoutDuration: TimeInterval = 3.0 // Reduced timeout
+        let startTime = Date()
+
+        while !DatabaseManager.shared.isDatabaseSetupComplete() {
+            if Date().timeIntervalSince(startTime) > timeoutDuration {
+                print("⚠️ Database setup taking longer than expected, but proceeding...")
+                break // Don't fail, just proceed
+            }
+            try? await Task.sleep(nanoseconds: 50_000_000) // Faster polling (0.05 seconds)
+        }
+
+        // NO DELAY - proceed immediately
+        print("✅ Database check complete")
+    }
+
+    private func setupServicesFast() async {
+        // Initialize subscription managers (quick sync operation)
+        SubscriptionManager.shared.configure(with: modelContext)
+
+        // Load products in background - don't wait for this
+        Task {
+            do {
+                try await PurchaseManager.shared.loadProducts()
+                await PurchaseManager.shared.checkSubscriptionStatus()
+                print("✅ Subscription services ready")
+            } catch {
+                print("⚠️ Subscription setup failed, but continuing: \(error)")
+            }
+        }
+    }
+
+    private func setupContentFast() async throws {
+        // Initialize ViewModel (immediate)
+        let vm = FlashcardViewModel(modelContext: modelContext)
+        viewModel = vm
+
+        // Load user settings (should be fast for offline)
+        await vm.loadUserSettings()
+
+        // Load first word - NO timeout or complex TaskGroup for offline
+        // Just load directly, if it fails we'll handle it gracefully
+        print("🔄 Loading first word...")
+        await vm.loadNextWord()
+
+        // Update progress counts (quick operations)
+        await vm.updateKnownWordsCount()
+        await vm.updateTotalWordsCount()
+
+        print("✅ Content loading complete")
+    }
+
+    // MARK: - Error Types
+
+    enum AppError: LocalizedError {
+        case databaseTimeout
+        case contentLoadTimeout
+        case viewModelCreationFailed
+
+        var errorDescription: String? {
+            switch self {
+            case .databaseTimeout:
+                return "Database setup took too long. Please restart the app."
+            case .contentLoadTimeout:
+                return "Loading content took too long. Please check your connection."
+            case .viewModelCreationFailed:
+                return "Failed to initialize the app interface."
+            }
+        }
     }
 }
 

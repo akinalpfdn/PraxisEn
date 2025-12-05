@@ -4,7 +4,6 @@ import StoreKit
 struct PremiumUpgradeView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var purchaseManager = PurchaseManager.shared
-    @State private var isLoading = false
 
     var body: some View {
         NavigationView {
@@ -19,8 +18,8 @@ struct PremiumUpgradeView: View {
                     // Pricing Section
                     pricingSection
 
-                    // CTA Buttons
-                    actionButtonsSection
+                    // Restore Section
+                    restoreSection
 
                     // Legal Links
                     legalLinksSection
@@ -44,7 +43,7 @@ struct PremiumUpgradeView: View {
                 }
             }
             .overlay {
-                if isLoading {
+                if purchaseManager.isLoading {
                     loadingOverlay
                 }
             }
@@ -130,11 +129,27 @@ struct PremiumUpgradeView: View {
                 .foregroundColor(.textPrimary)
 
             VStack(spacing: AppSpacing.md) {
-                // Yearly Plan (Recommended)
-                yearlyPlanCard
+                // Yearly Plan (Recommended) - Clickable
+                Button {
+                    Task {
+                        await subscribeToYearly()
+                    }
+                } label: {
+                    yearlyPlanCard
+                }
+                .disabled(purchaseManager.isLoading || purchaseManager.yearlyPremiumProduct == nil)
+                .buttonStyle(CardButtonStyle())
 
-                // Monthly Plan
-                monthlyPlanCard
+                // Monthly Plan - Clickable
+                Button {
+                    Task {
+                        await subscribeToMonthly()
+                    }
+                } label: {
+                    monthlyPlanCard
+                }
+                .disabled(purchaseManager.isLoading || purchaseManager.monthlyPremiumProduct == nil)
+                .buttonStyle(CardButtonStyle())
             }
         }
     }
@@ -195,6 +210,12 @@ struct PremiumUpgradeView: View {
                             .background(Color.success)
                             .cornerRadius(8)
                         Spacer()
+
+                        if purchaseManager.isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(0.8)
+                        }
                     }
                     Spacer()
                 }
@@ -222,6 +243,12 @@ struct PremiumUpgradeView: View {
                 }
 
                 Spacer()
+
+                if purchaseManager.isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .accentOrange))
+                        .scaleEffect(0.8)
+                }
             }
             .padding(.horizontal, AppSpacing.md)
             .padding(.vertical, AppSpacing.lg)
@@ -230,88 +257,31 @@ struct PremiumUpgradeView: View {
             .cardShadow()
             .overlay(
                 RoundedRectangle(cornerRadius: AppCornerRadius.card)
-                    .stroke(Color.creamDark, lineWidth: 1)
+                    .stroke(Color.accentOrange, lineWidth: 1)
             )
         }
     }
 
-    // MARK: - Action Buttons Section
+    // MARK: - Restore Section
 
-    private var actionButtonsSection: some View {
-        VStack(spacing: AppSpacing.md) {
-            // Subscribe Buttons (stacked)
-            VStack(spacing: AppSpacing.sm) {
-                // Yearly Subscribe Button (Primary)
-                Button {
-                    Task {
-                        await subscribeToYearly()
-                    }
-                } label: {
-                    HStack {
-                        if isLoading {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(0.8)
-                        } else {
-                            VStack(spacing: 2) {
-                                Text("Start Premium Yearly")
-                                    .font(AppTypography.bodyText)
-                                    .fontWeight(.semibold)
-
-                                Text("£29.99/year - Save 50%")
-                                    .font(.system(size: 12))
-                                    .opacity(0.9)
-                            }
-                        }
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, AppSpacing.md)
-                    .background(Color.success)
-                    .cornerRadius(AppCornerRadius.medium)
-                    .buttonShadow()
-                }
-                .disabled(isLoading || purchaseManager.yearlyPremiumProduct == nil)
-
-                // Monthly Subscribe Button (Secondary)
-                Button {
-                    Task {
-                        await subscribeToMonthly()
-                    }
-                } label: {
-                    HStack {
-                        Text("Subscribe Monthly - £4.99/mo")
-                            .font(AppTypography.bodyText)
-                            .fontWeight(.medium)
-                    }
-                    .foregroundColor(.accentOrange)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, AppSpacing.md)
-                    .background(Color.creamSecondary)
-                    .cornerRadius(AppCornerRadius.medium)
-                }
-                .disabled(isLoading || purchaseManager.monthlyPremiumProduct == nil)
+    private var restoreSection: some View {
+        Button {
+            Task {
+                await restorePurchases()
             }
-
-            // Restore Purchases Button
-            Button {
-                Task {
-                    await restorePurchases()
-                }
-            } label: {
-                Text("Restore Purchases")
-                    .font(AppTypography.bodyText)
-                    .foregroundColor(.textSecondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, AppSpacing.md)
-                    .background(Color.clear)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: AppCornerRadius.medium)
-                            .stroke(Color.textSecondary, lineWidth: 1)
-                    )
-            }
-            .disabled(isLoading)
+        } label: {
+            Text("Restore Purchases")
+                .font(AppTypography.bodyText)
+                .foregroundColor(.textSecondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, AppSpacing.md)
+                .background(Color.clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppCornerRadius.medium)
+                        .stroke(Color.textSecondary, lineWidth: 1)
+                )
         }
+        .disabled(purchaseManager.isLoading)
     }
 
     // MARK: - Legal Links Section
@@ -361,9 +331,6 @@ struct PremiumUpgradeView: View {
     // MARK: - Actions
 
     private func loadProducts() async {
-        isLoading = true
-        defer { isLoading = false }
-
         print("🔄 PremiumUpgradeView: Starting to load products...")
         print("🔄 PurchaseManager isLoading: \(purchaseManager.isLoading)")
         print("🔄 PurchaseManager products count: \(purchaseManager.products.count)")
@@ -374,11 +341,11 @@ struct PremiumUpgradeView: View {
             // Check button states after loading
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 print("📊 Button state check:")
-                print("   - isLoading: \(isLoading)")
+                print("   - isLoading: \(purchaseManager.isLoading)")
                 print("   - monthlyProduct available: \(purchaseManager.monthlyPremiumProduct != nil)")
                 print("   - yearlyProduct available: \(purchaseManager.yearlyPremiumProduct != nil)")
-                print("   - monthly button disabled: \(isLoading || purchaseManager.monthlyPremiumProduct == nil)")
-                print("   - yearly button disabled: \(isLoading || purchaseManager.yearlyPremiumProduct == nil)")
+                print("   - monthly button disabled: \(purchaseManager.isLoading || purchaseManager.monthlyPremiumProduct == nil)")
+                print("   - yearly button disabled: \(purchaseManager.isLoading || purchaseManager.yearlyPremiumProduct == nil)")
             }
         } catch {
             // Handle error silently or show error
@@ -388,9 +355,6 @@ struct PremiumUpgradeView: View {
 
     private func subscribeToYearly() async {
         guard let product = purchaseManager.yearlyPremiumProduct else { return }
-
-        isLoading = true
-        defer { isLoading = false }
 
         do {
             _ = try await purchaseManager.purchasePremium(product)
@@ -405,9 +369,6 @@ struct PremiumUpgradeView: View {
     private func subscribeToMonthly() async {
         guard let product = purchaseManager.monthlyPremiumProduct else { return }
 
-        isLoading = true
-        defer { isLoading = false }
-
         do {
             _ = try await purchaseManager.purchasePremium(product)
             // Success will be handled by the subscription manager
@@ -419,9 +380,6 @@ struct PremiumUpgradeView: View {
     }
 
     private func restorePurchases() async {
-        isLoading = true
-        defer { isLoading = false }
-
         do {
             try await purchaseManager.restorePurchases()
         } catch {
@@ -443,7 +401,7 @@ struct PremiumUpgradeView: View {
                 Text("Is loading: \(purchaseManager.isLoading)")
                 Text("Monthly product: \(purchaseManager.monthlyPremiumProduct != nil ? "✅" : "❌")")
                 Text("Yearly product: \(purchaseManager.yearlyPremiumProduct != nil ? "✅" : "❌")")
-                Text("View loading: \(isLoading)")
+                Text("View loading: N/A (using PurchaseManager state)")
 
                 if let monthly = purchaseManager.monthlyPremiumProduct {
                     Text("Monthly: \(monthly.displayPrice)")
@@ -464,6 +422,17 @@ struct PremiumUpgradeView: View {
                 await loadProducts()
             }
         }
+    }
+}
+
+// MARK: - Card Button Style
+
+struct CardButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            .opacity(configuration.isPressed ? 0.8 : 1.0)
     }
 }
 
