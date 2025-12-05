@@ -308,8 +308,8 @@ class FlashcardViewModel: ObservableObject {
         guard let word = currentWord else { return }
 
         do {
-            // Search for sentences containing the word
-            let sentences = try await DatabaseManager.shared.searchSentences(
+            // Search for sentences containing the word (ODR-aware)
+            let sentences = try await DatabaseManager.shared.searchSentencesWithFallback(
                 containing: word.word,
                 limit: 10
             )

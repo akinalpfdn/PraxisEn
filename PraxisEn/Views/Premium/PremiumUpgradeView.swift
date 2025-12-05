@@ -3,7 +3,7 @@ import StoreKit
 
 struct PremiumUpgradeView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var purchaseManager = PurchaseManager.shared
+    @ObservedObject private var purchaseManager = PurchaseManager.shared
     @State private var isLoading = false
 
     var body: some View {
@@ -24,6 +24,9 @@ struct PremiumUpgradeView: View {
 
                     // Legal Links
                     legalLinksSection
+
+                    // Debug Section (remove in production)
+                    debugSection
 
                     Spacer(minLength: 50)
                 }
@@ -126,35 +129,109 @@ struct PremiumUpgradeView: View {
                 .font(AppTypography.cardTitle)
                 .foregroundColor(.textPrimary)
 
-            // Premium Plan Card
             VStack(spacing: AppSpacing.md) {
-                HStack {
-                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                        Text("Premium Monthly")
+                // Yearly Plan (Recommended)
+                yearlyPlanCard
+
+                // Monthly Plan
+                monthlyPlanCard
+            }
+        }
+    }
+
+    private var yearlyPlanCard: some View {
+        VStack(spacing: AppSpacing.md) {
+            HStack {
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    HStack {
+                        Text("Premium Yearly")
                             .font(AppTypography.cardTitle)
                             .foregroundColor(.textPrimary)
 
-                        Text("Billed monthly, cancel anytime")
-                            .font(AppTypography.captionText)
-                            .foregroundColor(.textTertiary)
+                        Text("SAVE 50%")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.success)
+                            .cornerRadius(4)
                     }
 
+                    Text("Best value, billed yearly")
+                        .font(AppTypography.captionText)
+                        .foregroundColor(.textTertiary)
+
+                    HStack(spacing: AppSpacing.xs) {
+                        Text("£2.49/mo")
+                            .font(.system(size: AppTypography.headline, weight: .bold))
+                            .foregroundColor(.accentOrange)
+
+                        Text("£29.99/year")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.textSecondary)
+                            .strikethrough()
+                    }
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.vertical, AppSpacing.lg)
+            .background(Color.white)
+            .cornerRadius(AppCornerRadius.card)
+            .cardShadow()
+            .overlay(
+                RoundedRectangle(cornerRadius: AppCornerRadius.card)
+                    .stroke(Color.success, lineWidth: 2)
+            )
+            .overlay(
+                VStack {
+                    HStack {
+                        Text("MOST POPULAR")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.success)
+                            .cornerRadius(8)
+                        Spacer()
+                    }
                     Spacer()
+                }
+                .padding(.leading, AppSpacing.md)
+                .padding(.top, -8)
+            )
+        }
+    }
+
+    private var monthlyPlanCard: some View {
+        VStack(spacing: AppSpacing.md) {
+            HStack {
+                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                    Text("Premium Monthly")
+                        .font(AppTypography.cardTitle)
+                        .foregroundColor(.textPrimary)
+
+                    Text("Billed monthly, cancel anytime")
+                        .font(AppTypography.captionText)
+                        .foregroundColor(.textTertiary)
 
                     Text("£4.99/mo")
                         .font(.system(size: AppTypography.headline, weight: .bold))
-                        .foregroundColor(.accentOrange)
+                        .foregroundColor(.textSecondary)
                 }
-                .padding(.horizontal, AppSpacing.md)
-                .padding(.vertical, AppSpacing.lg)
-                .background(Color.white)
-                .cornerRadius(AppCornerRadius.card)
-                .cardShadow()
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppCornerRadius.card)
-                        .stroke(Color.accentOrange, lineWidth: 2)
-                )
+
+                Spacer()
             }
+            .padding(.horizontal, AppSpacing.md)
+            .padding(.vertical, AppSpacing.lg)
+            .background(Color.white)
+            .cornerRadius(AppCornerRadius.card)
+            .cardShadow()
+            .overlay(
+                RoundedRectangle(cornerRadius: AppCornerRadius.card)
+                    .stroke(Color.creamDark, lineWidth: 1)
+            )
         }
     }
 
@@ -162,31 +239,59 @@ struct PremiumUpgradeView: View {
 
     private var actionButtonsSection: some View {
         VStack(spacing: AppSpacing.md) {
-            // Subscribe Button
-            Button {
-                Task {
-                    await subscribeToPremium()
-                }
-            } label: {
-                HStack {
-                    if isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(0.8)
-                    } else {
-                        Text("Subscribe to Premium")
-                            .font(AppTypography.bodyText)
-                            .fontWeight(.semibold)
+            // Subscribe Buttons (stacked)
+            VStack(spacing: AppSpacing.sm) {
+                // Yearly Subscribe Button (Primary)
+                Button {
+                    Task {
+                        await subscribeToYearly()
                     }
+                } label: {
+                    HStack {
+                        if isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(0.8)
+                        } else {
+                            VStack(spacing: 2) {
+                                Text("Start Premium Yearly")
+                                    .font(AppTypography.bodyText)
+                                    .fontWeight(.semibold)
+
+                                Text("£29.99/year - Save 50%")
+                                    .font(.system(size: 12))
+                                    .opacity(0.9)
+                            }
+                        }
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, AppSpacing.md)
+                    .background(Color.success)
+                    .cornerRadius(AppCornerRadius.medium)
+                    .buttonShadow()
                 }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, AppSpacing.md)
-                .background(Color.accentOrange)
-                .cornerRadius(AppCornerRadius.medium)
-                .buttonShadow()
+                .disabled(isLoading || purchaseManager.yearlyPremiumProduct == nil)
+
+                // Monthly Subscribe Button (Secondary)
+                Button {
+                    Task {
+                        await subscribeToMonthly()
+                    }
+                } label: {
+                    HStack {
+                        Text("Subscribe Monthly - £4.99/mo")
+                            .font(AppTypography.bodyText)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(.accentOrange)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, AppSpacing.md)
+                    .background(Color.creamSecondary)
+                    .cornerRadius(AppCornerRadius.medium)
+                }
+                .disabled(isLoading || purchaseManager.monthlyPremiumProduct == nil)
             }
-            .disabled(isLoading || purchaseManager.monthlyPremiumProduct == nil)
 
             // Restore Purchases Button
             Button {
@@ -196,11 +301,14 @@ struct PremiumUpgradeView: View {
             } label: {
                 Text("Restore Purchases")
                     .font(AppTypography.bodyText)
-                    .foregroundColor(.accentOrange)
+                    .foregroundColor(.textSecondary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, AppSpacing.md)
-                    .background(Color.creamSecondary)
-                    .cornerRadius(AppCornerRadius.medium)
+                    .background(Color.clear)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppCornerRadius.medium)
+                            .stroke(Color.textSecondary, lineWidth: 1)
+                    )
             }
             .disabled(isLoading)
         }
@@ -256,15 +364,45 @@ struct PremiumUpgradeView: View {
         isLoading = true
         defer { isLoading = false }
 
+        print("🔄 PremiumUpgradeView: Starting to load products...")
+        print("🔄 PurchaseManager isLoading: \(purchaseManager.isLoading)")
+        print("🔄 PurchaseManager products count: \(purchaseManager.products.count)")
+
         do {
             try await purchaseManager.loadProducts()
+
+            // Check button states after loading
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                print("📊 Button state check:")
+                print("   - isLoading: \(isLoading)")
+                print("   - monthlyProduct available: \(purchaseManager.monthlyPremiumProduct != nil)")
+                print("   - yearlyProduct available: \(purchaseManager.yearlyPremiumProduct != nil)")
+                print("   - monthly button disabled: \(isLoading || purchaseManager.monthlyPremiumProduct == nil)")
+                print("   - yearly button disabled: \(isLoading || purchaseManager.yearlyPremiumProduct == nil)")
+            }
         } catch {
             // Handle error silently or show error
-            print("Failed to load products: \(error)")
+            print("❌ PremiumUpgradeView: Failed to load products: \(error)")
         }
     }
 
-    private func subscribeToPremium() async {
+    private func subscribeToYearly() async {
+        guard let product = purchaseManager.yearlyPremiumProduct else { return }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            _ = try await purchaseManager.purchasePremium(product)
+            // Success will be handled by the subscription manager
+            dismiss()
+        } catch {
+            // Handle purchase error
+            print("Yearly purchase failed: \(error)")
+        }
+    }
+
+    private func subscribeToMonthly() async {
         guard let product = purchaseManager.monthlyPremiumProduct else { return }
 
         isLoading = true
@@ -276,7 +414,7 @@ struct PremiumUpgradeView: View {
             dismiss()
         } catch {
             // Handle purchase error
-            print("Purchase failed: \(error)")
+            print("Monthly purchase failed: \(error)")
         }
     }
 
@@ -289,6 +427,42 @@ struct PremiumUpgradeView: View {
         } catch {
             // Handle restore error
             print("Restore failed: \(error)")
+        }
+    }
+
+    // MARK: - Debug Section
+
+    private var debugSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("🔍 Debug Info")
+                .font(.headline)
+                .foregroundColor(.red)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Products loaded: \(purchaseManager.products.count)")
+                Text("Is loading: \(purchaseManager.isLoading)")
+                Text("Monthly product: \(purchaseManager.monthlyPremiumProduct != nil ? "✅" : "❌")")
+                Text("Yearly product: \(purchaseManager.yearlyPremiumProduct != nil ? "✅" : "❌")")
+                Text("View loading: \(isLoading)")
+
+                if let monthly = purchaseManager.monthlyPremiumProduct {
+                    Text("Monthly: \(monthly.displayPrice)")
+                }
+                if let yearly = purchaseManager.yearlyPremiumProduct {
+                    Text("Yearly: \(yearly.displayPrice)")
+                }
+            }
+            .font(.caption)
+            .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(8)
+        .onTapGesture {
+            // Manual refresh
+            Task {
+                await loadProducts()
+            }
         }
     }
 }

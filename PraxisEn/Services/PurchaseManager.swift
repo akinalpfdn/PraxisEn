@@ -8,8 +8,8 @@ class PurchaseManager: ObservableObject {
 
     // MARK: - Product IDs
     private let productIDs: Set<String> = [
-        "praxisen_premium_monthly"
-        // Add "praxisen_premium_yearly" when ready
+        "praxisen_premium_monthly",
+        "praxisen_premium_yearly"
     ]
 
     // MARK: - Published Properties
@@ -36,11 +36,22 @@ class PurchaseManager: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
+        print("🛒 Starting to load products with IDs: \(productIDs)")
+
         do {
             products = try await Product.products(for: productIDs)
-            print("✅ Loaded \(products.count) products")
+            print("✅ Loaded \(products.count) products:")
+            for product in products {
+                print("   - \(product.id): \(product.displayPrice) (\(product.type))")
+            }
+
+            // Check if specific products are available
+            print("📦 Monthly product available: \(monthlyPremiumProduct != nil)")
+            print("📦 Yearly product available: \(yearlyPremiumProduct != nil)")
+
         } catch {
             print("❌ Failed to load products: \(error)")
+            print("❌ Error details: \(error.localizedDescription)")
             throw PurchaseError.productLoadFailed
         }
     }
@@ -50,9 +61,14 @@ class PurchaseManager: ObservableObject {
         return products.first { $0.id == "praxisen_premium_monthly" }
     }
 
+    /// Returns the yearly premium product if available
+    var yearlyPremiumProduct: Product? {
+        return products.first { $0.id == "praxisen_premium_yearly" }
+    }
+
     // MARK: - Purchase Methods
 
-    /// Purchases the premium subscription
+    /// Purchases the premium subscription (monthly or yearly)
     func purchasePremium(_ product: Product) async throws -> Transaction {
         guard product.type == .autoRenewable else {
             throw PurchaseError.invalidProduct
@@ -128,8 +144,9 @@ class PurchaseManager: ObservableObject {
             for await result in Transaction.currentEntitlements {
                 let verifiedTransaction = try checkVerified(result)
 
-                // Check for premium subscription
-                if verifiedTransaction.productID == "praxisen_premium_monthly" {
+                // Check for premium subscription (monthly or yearly)
+                if verifiedTransaction.productID == "praxisen_premium_monthly" ||
+                   verifiedTransaction.productID == "praxisen_premium_yearly" {
                     if verifiedTransaction.revocationDate == nil {
                         // Subscription is not revoked
                         if verifiedTransaction.expirationDate ?? Date.distantFuture > Date() {
@@ -143,7 +160,17 @@ class PurchaseManager: ObservableObject {
 
             // Update subscription manager based on restored status
             if hasActiveSubscription {
-                let startDate = subscriptionExpiration?.addingTimeInterval(-30 * 24 * 60 * 60) ?? Date()
+                // Determine if it's monthly (30 days) or yearly (365 days) based on product ID found
+                let estimatedDuration = subscriptionExpiration?.timeIntervalSinceNow ?? 0
+                let isYearly = estimatedDuration > 180 // More than 6 months = yearly
+
+                let startDate: Date
+                if isYearly {
+                    startDate = subscriptionExpiration?.addingTimeInterval(-365 * 24 * 60 * 60) ?? Date()
+                } else {
+                    startDate = subscriptionExpiration?.addingTimeInterval(-30 * 24 * 60 * 60) ?? Date()
+                }
+
                 await SubscriptionManager.shared.activatePremiumSubscription(
                     startDate: startDate,
                     expirationDate: subscriptionExpiration
@@ -172,7 +199,8 @@ class PurchaseManager: ObservableObject {
             for await result in Transaction.currentEntitlements {
                 let verifiedTransaction = try checkVerified(result)
 
-                if verifiedTransaction.productID == "praxisen_premium_monthly" {
+                if verifiedTransaction.productID == "praxisen_premium_monthly" ||
+                   verifiedTransaction.productID == "praxisen_premium_yearly" {
                     if verifiedTransaction.revocationDate == nil {
                         if verifiedTransaction.expirationDate ?? Date.distantFuture > Date() {
                             hasActiveSubscription = true
@@ -183,7 +211,17 @@ class PurchaseManager: ObservableObject {
             }
 
             if hasActiveSubscription {
-                let startDate = subscriptionExpiration?.addingTimeInterval(-30 * 24 * 60 * 60) ?? Date()
+                // Determine if it's monthly (30 days) or yearly (365 days) based on duration
+                let estimatedDuration = subscriptionExpiration?.timeIntervalSinceNow ?? 0
+                let isYearly = estimatedDuration > 180 // More than 6 months = yearly
+
+                let startDate: Date
+                if isYearly {
+                    startDate = subscriptionExpiration?.addingTimeInterval(-365 * 24 * 60 * 60) ?? Date()
+                } else {
+                    startDate = subscriptionExpiration?.addingTimeInterval(-30 * 24 * 60 * 60) ?? Date()
+                }
+
                 await SubscriptionManager.shared.activatePremiumSubscription(
                     startDate: startDate,
                     expirationDate: subscriptionExpiration
@@ -206,7 +244,8 @@ class PurchaseManager: ObservableObject {
             for await result in Transaction.currentEntitlements {
                 let verifiedTransaction = try checkVerified(result)
 
-                if verifiedTransaction.productID == "praxisen_premium_monthly" {
+                if verifiedTransaction.productID == "praxisen_premium_monthly" ||
+                   verifiedTransaction.productID == "praxisen_premium_yearly" {
                     if verifiedTransaction.revocationDate == nil {
                         let isActive = verifiedTransaction.expirationDate ?? Date.distantFuture > Date()
                         return SubscriptionStatus(
@@ -247,7 +286,8 @@ class PurchaseManager: ObservableObject {
                     let transaction = try self.checkVerified(result)
 
                     // Handle the transaction
-                    if transaction.productID == "praxisen_premium_monthly" {
+                    if transaction.productID == "praxisen_premium_monthly" ||
+                       transaction.productID == "praxisen_premium_yearly" {
                         await self.handleSubscriptionTransaction(transaction)
                     }
 

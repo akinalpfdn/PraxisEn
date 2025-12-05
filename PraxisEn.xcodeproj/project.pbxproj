@@ -7201,6 +7201,7 @@
 		F410AA3E2EDA14DC00B63464 /* hello.webp in Resources */ = {isa = PBXBuildFile; fileRef = F4108E982EDA14DC00B63464 /* hello.webp */; };
 		F410AAA32EDA14DC00B63464 /* yes.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = F4108EB32EDA14DC00B63464 /* yes.mp3 */; };
 		F410ECD92ECCD40700B63464 /* sentences.db in Resources */ = {isa = PBXBuildFile; fileRef = F410E1242ECCD40700B63464 /* sentences.db */; settings = {ASSET_TAGS = (all_media, ); }; };
+		F4F5C2F52EE35369003198A4 /* Products.storekit in Resources */ = {isa = PBXBuildFile; fileRef = F4F5C2F42EE35369003198A4 /* Products.storekit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -14399,6 +14400,7 @@
 		F4108EB42EDA14DC00B63464 /* yes.webp */ = {isa = PBXFileReference; lastKnownFileType = file; path = yes.webp; sourceTree = "<group>"; };
 		F410BBD02EC25E6600B63464 /* PraxisEn.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PraxisEn.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F410E1242ECCD40700B63464 /* sentences.db */ = {isa = PBXFileReference; lastKnownFileType = file; path = sentences.db; sourceTree = "<group>"; };
+		F4F5C2F42EE35369003198A4 /* Products.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Products.storekit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -21640,6 +21642,7 @@
 		F410BBC72EC25E6600B63464 = {
 			isa = PBXGroup;
 			children = (
+				F4F5C2F42EE35369003198A4 /* Products.storekit */,
 				F410BBD22EC25E6600B63464 /* PraxisEn */,
 				F410BBD12EC25E6600B63464 /* Products */,
 				F41056802EDA034400B63464 /* Media */,
@@ -27369,6 +27372,7 @@
 				F4106C872EDA034500B63464 /* side.webp in Resources */,
 				F4106C882EDA034500B63464 /* car.mp3 in Resources */,
 				F4106C892EDA034500B63464 /* feed.webp in Resources */,
+				F4F5C2F52EE35369003198A4 /* Products.storekit in Resources */,
 				F4106C8A2EDA034500B63464 /* regular.mp3 in Resources */,
 				F4106C8B2EDA034500B63464 /* October.mp3 in Resources */,
 				F4106C8C2EDA034500B63464 /* summary.mp3 in Resources */,
