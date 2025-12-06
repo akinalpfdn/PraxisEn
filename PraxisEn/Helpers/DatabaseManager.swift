@@ -73,20 +73,75 @@ class DatabaseManager {
         let documentsURL = try getDocumentsDirectory()
         let destinationURL = documentsURL.appendingPathComponent(fileName)
 
+        print("📁 Setting up sentences database...")
+        print("🔍 Documents path: \(documentsURL.path)")
+        print("🔍 Destination URL: \(destinationURL.path)")
+
         // Check if already exists
         if FileManager.default.fileExists(atPath: destinationURL.path) {
-            return false // Already set up
+            print("✅ Sentences DB already exists at Documents")
+
+            // Check if the existing file has content and tables
+            if let attributes = try? FileManager.default.attributesOfItem(atPath: destinationURL.path),
+               let fileSize = attributes[.size] as? Int64 {
+                print("📊 Existing DB file size: \(fileSize) bytes")
+
+                if fileSize == 0 {
+                    print("⚠️ Existing DB file is empty! Will re-copy from bundle.")
+                    try? FileManager.default.removeItem(at: destinationURL)
+                } else {
+                    // Try to check if database has tables
+                    if let db = try? openDatabase(at: destinationURL.path) {
+                        let hasTables = checkIfTablesExist(db: db)
+                        print("📋 Existing DB has tables: \(hasTables)")
+                        sqlite3_close(db)
+
+                        if hasTables {
+                            return false // All good, proceed
+                        } else {
+                            print("⚠️ Existing DB has no tables! Will re-copy from bundle.")
+                            try? FileManager.default.removeItem(at: destinationURL)
+                        }
+                    }
+                }
+            }
+
+            if FileManager.default.fileExists(atPath: destinationURL.path) {
+                return false // File exists and seems OK
+            }
         }
 
-        // Copy from bundle
-        guard let bundleURL = Bundle.main.url(forResource: "sentences", withExtension: "db") else {
+        // Use ODR to download sentences database
+        print("📥 Using ODR to download sentences database...")
+        let resourceRequest = NSBundleResourceRequest(tags: ["all_media"])
+
+        do {
+            try await resourceRequest.beginAccessingResources()
+            print("✅ ODR resources accessed successfully")
+
+            // Try to find sentences.db in ODR resources
+            if let odrURL = Bundle.main.url(forResource: "sentences", withExtension: "db") {
+                print("✅ Found sentences.db via ODR: \(odrURL.path)")
+
+                // Check ODR file size
+                if let attributes = try? FileManager.default.attributesOfItem(atPath: odrURL.path),
+                   let fileSize = attributes[.size] as? Int64 {
+                    print("📊 ODR file size: \(fileSize) bytes")
+                }
+
+                try FileManager.default.copyItem(at: odrURL, to: destinationURL)
+                print("✅ Copied \(fileName) from ODR to Documents")
+                resourceRequest.endAccessingResources()
+                return true
+            } else {
+                print("❌ sentences.db NOT FOUND even in ODR resources!")
+                resourceRequest.endAccessingResources()
+                throw DatabaseError.bundleFileNotFound(fileName)
+            }
+        } catch {
+            print("❌ Failed to access ODR resources: \(error)")
             throw DatabaseError.bundleFileNotFound(fileName)
         }
-
-        try FileManager.default.copyItem(at: bundleURL, to: destinationURL)
-        ////print("✅ Copied \(fileName) to Documents directory")
-
-        return true
     }
 
     // MARK: - Data Import
@@ -240,14 +295,48 @@ class DatabaseManager {
         let documentsURL = try getDocumentsDirectory()
         let dbURL = documentsURL.appendingPathComponent("sentences.db")
 
-        //print("🗄️ Opening database at: \(dbURL.path)")
+        print("🗄️ Opening sentences database at: \(dbURL.path)")
+        print("📁 Database file exists: \(FileManager.default.fileExists(atPath: dbURL.path))")
 
         var db: OpaquePointer?
         guard sqlite3_open(dbURL.path, &db) == SQLITE_OK else {
-            //print("❌ Failed to open database")
+            let errorMessage = String(cString: sqlite3_errmsg(db))
+            print("❌ Failed to open sentences database: \(errorMessage)")
             throw DatabaseError.cannotOpenDatabase
         }
         defer { sqlite3_close(db) }
+
+        // Debug: Check what tables exist
+        let tableQuery = "SELECT name FROM sqlite_master WHERE type='table'"
+        var tableStatement: OpaquePointer?
+        let tableResult = sqlite3_prepare_v2(db, tableQuery, -1, &tableStatement, nil)
+        if tableResult == SQLITE_OK {
+            print("📋 Tables in database:")
+            while sqlite3_step(tableStatement) == SQLITE_ROW {
+                if let tableName = sqlite3_column_text(tableStatement, 0) {
+                    let name = String(cString: tableName)
+                    print("  - \(name)")
+                }
+            }
+            sqlite3_finalize(tableStatement)
+        } else {
+            let errorMsg = String(cString: sqlite3_errmsg(db))
+            print("❌ Could not query table list, SQLite error: \(errorMsg)")
+
+            // Try alternative query
+            let altQuery = "SELECT name FROM sqlite_master"
+            var altStatement: OpaquePointer?
+            if sqlite3_prepare_v2(db, altQuery, -1, &altStatement, nil) == SQLITE_OK {
+                print("📋 All sqlite_master entries:")
+                while sqlite3_step(altStatement) == SQLITE_ROW {
+                    if let name = sqlite3_column_text(altStatement, 0) {
+                        let nameStr = String(cString: name)
+                        print("  - \(nameStr)")
+                    }
+                }
+                sqlite3_finalize(altStatement)
+            }
+        }
 
         // Search only in English text (fetch more results, will filter in Swift)
         let query = """
@@ -258,7 +347,11 @@ class DatabaseManager {
         """
 
         var statement: OpaquePointer?
-        guard sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK else {
+        let prepareResult = sqlite3_prepare_v2(db, query, -1, &statement, nil)
+        guard prepareResult == SQLITE_OK else {
+            let errorMessage = String(cString: sqlite3_errmsg(db))
+            print("❌ SQLite prepare failed with code \(prepareResult): \(errorMessage)")
+            print("🔍 Query was: \(query)")
             throw DatabaseError.queryPreparationFailed
         }
         defer { sqlite3_finalize(statement) }
@@ -288,7 +381,7 @@ class DatabaseManager {
             ))
         }
 
-        //print("📥 SQL returned \(allResults.count) sentences, filtering for whole word matches...")
+        print("📥 SQL returned \(allResults.count) sentences, filtering for whole word matches...")
 
         // Filter for whole word matches using Swift regex
         let wordPattern = try! NSRegularExpression(pattern: "\\b\(NSRegularExpression.escapedPattern(for: word))\\b", options: .caseInsensitive)
@@ -297,21 +390,27 @@ class DatabaseManager {
             return wordPattern.firstMatch(in: sentence.englishText, range: range) != nil
         }.prefix(limit)
 
-        //print("✅ Found \(results.count) whole-word matches for '\(word)'")
+        print("✅ Found \(results.count) whole-word matches for '\(word)'")
         return Array(results)
     }
 
-    /// ODR-aware sentence search that returns empty results if sentences not downloaded yet
+    /// Sentence search with ODR fallback - tries direct access first, then ODR check
     func searchSentencesWithFallback(
         containing word: String,
         limit: Int = 50
     ) async throws -> [SentencePair] {
-        // Only search sentences if ODR content is available
-        if await ODRManager.shared.checkFullContentAvailability() {
+        do {
+            // Try direct database access first (most reliable)
             return try await searchSentences(containing: word, limit: limit)
-        } else {
-            logger.info("Sentences not available for word '\(word)' - ODR content not downloaded")
-            return []
+        } catch {
+            // If direct access fails, try ODR path
+            if await ODRManager.shared.checkFullContentAvailability() {
+                logger.info("Direct access failed, trying ODR path for word '\(word)'")
+                return try await searchSentences(containing: word, limit: limit)
+            } else {
+                logger.info("Sentences not available for word '\(word)' - both direct and ODR access failed: \(error)")
+                return []
+            }
         }
     }
 
@@ -411,6 +510,34 @@ class DatabaseManager {
         let sentencesSize = try FileManager.default.attributesOfItem(atPath: sentencesURL.path)[.size] as? Int64 ?? 0
 
         return (vocabSize, sentencesSize)
+    }
+
+    // MARK: - Helper Methods
+
+    private func openDatabase(at path: String) throws -> OpaquePointer? {
+        var db: OpaquePointer?
+        guard sqlite3_open(path, &db) == SQLITE_OK else {
+            throw DatabaseError.cannotOpenDatabase
+        }
+        return db
+    }
+
+    private func checkIfTablesExist(db: OpaquePointer) -> Bool {
+        let query = "SELECT name FROM sqlite_master WHERE type='table'"
+        var statement: OpaquePointer?
+
+        if sqlite3_prepare_v2(db, query, -1, &statement, nil) == SQLITE_OK {
+            defer { sqlite3_finalize(statement) }
+
+            while sqlite3_step(statement) == SQLITE_ROW {
+                if let tableName = sqlite3_column_text(statement, 0) {
+                    let name = String(cString: tableName)
+                    print("  Found table: \(name)")
+                }
+            }
+            return true // At least we can query the database
+        }
+        return false
     }
 }
 

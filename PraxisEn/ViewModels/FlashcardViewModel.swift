@@ -308,7 +308,17 @@ class FlashcardViewModel: ObservableObject {
 
     /// Load example sentences for current word (max 10)
     private func loadExamplesForCurrentWord() async {
-        guard let word = currentWord else { return }
+        guard let word = currentWord else {
+            print("⚠️ No current word to load examples for")
+            return
+        }
+
+        print("🔍 Loading examples for word: '\(word.word)'")
+
+        // Show loading state first
+        await MainActor.run {
+            exampleSentences = []
+        }
 
         do {
             // Search for sentences containing the word (ODR-aware)
@@ -317,16 +327,24 @@ class FlashcardViewModel: ObservableObject {
                 limit: 10
             )
 
+            print("📝 Found \(sentences.count) raw sentences for '\(word.word)'")
+
             // Filter and limit to best examples
             let filtered = sentences
                 .filter { $0.englishText.lowercased().contains(word.word.lowercased()) }
                 .sorted { $0.difficultyTier < $1.difficultyTier } // Easier first
                 .prefix(SubscriptionManager.shared.getMaxSentencesPerWord())
 
-            exampleSentences = Array(filtered)
+            print("✅ After filtering: \(filtered.count) sentences for '\(word.word)'")
+
+            await MainActor.run {
+                exampleSentences = Array(filtered)
+            }
 
         } catch {
-            exampleSentences = []
+            print("❌ Failed to load examples for '\(word.word)': \(error)")
+            // Keep showing loading state instead of empty array
+            // The UI should show "Example sentences loading..." when array is empty
         }
     }
 

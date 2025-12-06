@@ -163,26 +163,23 @@ struct ContentView: View {
     }
 
     private func setupDatabaseFast() async throws {
-        // Quick check - if database is ready, proceed immediately
+        print("🔧 Initializing database setup...")
+
+        do {
+            // ALWAYS trigger database setup to ensure sentences are set up
+            try await DatabaseManager.shared.setupDatabasesIfNeeded()
+            print("✅ Database setup completed")
+        } catch {
+            print("⚠️ Database setup failed: \(error)")
+            // Don't throw error - continue with limited functionality
+        }
+
+        // Check final status
         if DatabaseManager.shared.isDatabaseSetupComplete() {
-            print("✅ Database ready immediately")
-            return
+            print("✅ Database ready")
+        } else {
+            print("⚠️ Database setup incomplete, proceeding anyway...")
         }
-
-        // Only wait if actually needed (should be rare)
-        let timeoutDuration: TimeInterval = 3.0 // Reduced timeout
-        let startTime = Date()
-
-        while !DatabaseManager.shared.isDatabaseSetupComplete() {
-            if Date().timeIntervalSince(startTime) > timeoutDuration {
-                print("⚠️ Database setup taking longer than expected, but proceeding...")
-                break // Don't fail, just proceed
-            }
-            try? await Task.sleep(nanoseconds: 50_000_000) // Faster polling (0.05 seconds)
-        }
-
-        // NO DELAY - proceed immediately
-        print("✅ Database check complete")
     }
 
     private func setupServicesFast() async {

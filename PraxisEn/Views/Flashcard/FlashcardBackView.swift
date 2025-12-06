@@ -108,13 +108,13 @@ struct FlashcardBackView: View {
                     }
 
                     // Example sentences
-                    if !examples.isEmpty {
-                        VStack(alignment: .leading, spacing: AppSpacing.md) {
-                            Text("Examples")
-                                .font(AppTypography.captionText)
-                                .foregroundColor(.textSecondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(alignment: .leading, spacing: AppSpacing.md) {
+                        Text("Examples")
+                            .font(AppTypography.captionText)
+                            .foregroundColor(.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
 
+                        if !examples.isEmpty {
                             ForEach(examples.prefix(10), id: \.id) { example in
                                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
                                     Text(example.englishText)
@@ -130,10 +130,25 @@ struct FlashcardBackView: View {
                                 }
                                 .padding(.vertical, AppSpacing.xs)
                             }
+                        } else {
+                            // Show loading state when no examples available
+                            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                                HStack {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .textTertiary))
+                                        .scaleEffect(0.8)
+
+                                    Text("Example sentences loading...")
+                                        .font(AppTypography.example)
+                                        .foregroundColor(.textTertiary)
+                                        .italic()
+                                }
+                                .padding(.vertical, AppSpacing.sm)
+                            }
                         }
-                        .padding(.horizontal, AppSpacing.lg)
-                        .padding(.bottom, AppSpacing.xl)
                     }
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.bottom, AppSpacing.xl)
                 }
             }
         }
