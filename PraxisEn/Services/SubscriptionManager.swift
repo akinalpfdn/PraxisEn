@@ -53,7 +53,7 @@ class SubscriptionManager: ObservableObject {
                 updatePublishedProperties()
             }
         } catch {
-            print("❌ Failed to load user settings: \(error)")
+            //print("❌ Failed to load user settings: \(error)")
         }
     }
 
@@ -65,7 +65,7 @@ class SubscriptionManager: ObservableObject {
             try modelContext.save()
             updatePublishedProperties()
         } catch {
-            print("❌ Failed to save user settings: \(error)")
+            //print("❌ Failed to save user settings: \(error)")
         }
     }
 
@@ -127,7 +127,7 @@ class SubscriptionManager: ObservableObject {
     /// Returns true if the user can make another swipe (card advance)
     func canMakeSwipe() -> Bool {
         guard let settings = userSettings else {
-            print("❌ canMakeSwipe: No user settings found")
+            //print("❌ canMakeSwipe: No user settings found")
             return false
         }
 
@@ -136,13 +136,13 @@ class SubscriptionManager: ObservableObject {
 
         // Premium users have unlimited swipes
         if settings.subscriptionTier == .premium && settings.subscriptionIsActive {
-            print("✅ canMakeSwipe: Premium user with active subscription")
+            //print("✅ canMakeSwipe: Premium user with active subscription")
             return true
         }
 
         // Free users are limited to 30 swipes per day
         let canSwipe = settings.dailySwipesUsed < freeTierSwipeLimit
-        print("🎯 canMakeSwipe: Free user - \(settings.dailySwipesUsed)/\(freeTierSwipeLimit) used, can swipe: \(canSwipe)")
+        //print("🎯 canMakeSwipe: Free user - \(settings.dailySwipesUsed)/\(freeTierSwipeLimit) used, can swipe: \(canSwipe)")
         return canSwipe
     }
 
@@ -171,7 +171,7 @@ class SubscriptionManager: ObservableObject {
 
         // Check if we need to reset the daily counter (new day)
         if !calendar.isDate(settings.lastSwipeResetDate, inSameDayAs: now) {
-            print("🔄 Daily swipe reset triggered - was \(settings.dailySwipesUsed), now 0")
+            //print("🔄 Daily swipe reset triggered - was \(settings.dailySwipesUsed), now 0")
             settings.dailySwipesUsed = 0
             settings.lastSwipeResetDate = now
             settings.updatedAt = Date()
@@ -183,7 +183,7 @@ class SubscriptionManager: ObservableObject {
             self.dailySwipesRemaining = max(0, self.freeTierSwipeLimit - settings.dailySwipesUsed)
         }
 
-        print("📊 Daily swipe status: \(settings.dailySwipesUsed)/\(freeTierSwipeLimit) used")
+        //print("📊 Daily swipe status: \(settings.dailySwipesUsed)/\(freeTierSwipeLimit) used")
     }
 
     /// Returns the current daily swipe usage information
@@ -256,7 +256,7 @@ class SubscriptionManager: ObservableObject {
     private func handleSubscriptionExpiration() {
         guard let settings = userSettings else { return }
 
-        print("🔄 Subscription expired, deactivating premium features")
+        //print("🔄 Subscription expired, deactivating premium features")
         deactivatePremiumSubscription()
 
         // Post notification for UI components to react
@@ -309,7 +309,7 @@ class SubscriptionManager: ObservableObject {
                     "daysUntilExpiration": getDaysUntilExpiration() ?? 0
                 ]
             )
-            print("⚠️ Subscription expiring soon warning posted")
+            //print("⚠️ Subscription expiring soon warning posted")
         }
     }
 

@@ -77,7 +77,7 @@ struct FlashcardView: View {
             collocations: ["abandon hope", "abandon ship"],
             isFlipped: false,
             onTap: {},
-            onPlayAudio: { //print("Play audio")
+            onPlayAudio: { ////print("Play audio")
             }
         )
 
@@ -95,7 +95,7 @@ struct FlashcardView: View {
             collocations: [],
             isFlipped: true,
             onTap: {},
-            onPlayAudio: { //print("Play audio")
+            onPlayAudio: { ////print("Play audio")
             }
         )
     }

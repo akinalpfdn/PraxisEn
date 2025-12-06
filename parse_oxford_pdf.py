@@ -406,7 +406,7 @@ def parse_oxford_pdf_text():
     return word_levels
 
 def main():
-    //print("Parsing Oxford 3000 PDF...")
+    ////print("Parsing Oxford 3000 PDF...")
     word_levels = parse_oxford_pdf_text()
 
     # Write to CSV
@@ -416,13 +416,13 @@ def main():
         writer.writeheader()
         writer.writerows(word_levels)
 
-    //print(f"✅ Extracted {len(word_levels)} words with levels")
-    //print(f"✅ Saved to {output_file}")
+    ////print(f"✅ Extracted {len(word_levels)} words with levels")
+    ////print(f"✅ Saved to {output_file}")
 
     # Show sample
-    //print("\nSample entries:")
+    ////print("\nSample entries:")
     for item in word_levels[:10]:
-        //print(f"  {item['word']:<20} → {item['level']}")
+        ////print(f"  {item['word']:<20} → {item['level']}")
 
 if __name__ == '__main__':
     main()

@@ -65,7 +65,7 @@ def parse_comprehensive(pdf_path):
 def main():
     pdf_path = 'The_Oxford_3000.pdf'
 
-    //print(f"📖 Parsing {pdf_path} comprehensively...")
+    ////print(f"📖 Parsing {pdf_path} comprehensively...")
     word_levels = parse_comprehensive(pdf_path)
 
     # Sort alphabetically
@@ -78,8 +78,8 @@ def main():
         writer.writeheader()
         writer.writerows(word_levels)
 
-    //print(f"✅ Extracted {len(word_levels)} unique words")
-    //print(f"✅ Saved to {output_file}")
+    ////print(f"✅ Extracted {len(word_levels)} unique words")
+    ////print(f"✅ Saved to {output_file}")
 
     # Statistics
     level_counts = {}
@@ -87,16 +87,16 @@ def main():
         level = item['level']
         level_counts[level] = level_counts.get(level, 0) + 1
 
-    //print("\n📊 Level distribution:")
+    ////print("\n📊 Level distribution:")
     total = sum(level_counts.values())
     for level in ['A1', 'A2', 'B1', 'B2']:
         count = level_counts.get(level, 0)
         pct = (count / total * 100) if total > 0 else 0
-        //print(f"  {level}: {count:4d} words ({pct:5.1f}%)")
+        ////print(f"  {level}: {count:4d} words ({pct:5.1f}%)")
 
-    //print(f"\n📝 First 20 words:")
+    ////print(f"\n📝 First 20 words:")
     for item in word_levels[:20]:
-        //print(f"  {item['word']:<25} → {item['level']}")
+        ////print(f"  {item['word']:<25} → {item['level']}")
 
 if __name__ == '__main__':
     main()

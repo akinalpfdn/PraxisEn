@@ -331,25 +331,25 @@ struct PremiumUpgradeView: View {
     // MARK: - Actions
 
     private func loadProducts() async {
-        print("🔄 PremiumUpgradeView: Starting to load products...")
-        print("🔄 PurchaseManager isLoading: \(purchaseManager.isLoading)")
-        print("🔄 PurchaseManager products count: \(purchaseManager.products.count)")
+        //print("🔄 PremiumUpgradeView: Starting to load products...")
+        //print("🔄 PurchaseManager isLoading: \(purchaseManager.isLoading)")
+        //print("🔄 PurchaseManager products count: \(purchaseManager.products.count)")
 
         do {
             try await purchaseManager.loadProducts()
 
             // Check button states after loading
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                print("📊 Button state check:")
-                print("   - isLoading: \(purchaseManager.isLoading)")
-                print("   - monthlyProduct available: \(purchaseManager.monthlyPremiumProduct != nil)")
-                print("   - yearlyProduct available: \(purchaseManager.yearlyPremiumProduct != nil)")
-                print("   - monthly button disabled: \(purchaseManager.isLoading || purchaseManager.monthlyPremiumProduct == nil)")
-                print("   - yearly button disabled: \(purchaseManager.isLoading || purchaseManager.yearlyPremiumProduct == nil)")
+                //print("📊 Button state check:")
+                //print("   - isLoading: \(purchaseManager.isLoading)")
+                //print("   - monthlyProduct available: \(purchaseManager.monthlyPremiumProduct != nil)")
+                //print("   - yearlyProduct available: \(purchaseManager.yearlyPremiumProduct != nil)")
+                //print("   - monthly button disabled: \(purchaseManager.isLoading || purchaseManager.monthlyPremiumProduct == nil)")
+                //print("   - yearly button disabled: \(purchaseManager.isLoading || purchaseManager.yearlyPremiumProduct == nil)")
             }
         } catch {
             // Handle error silently or show error
-            print("❌ PremiumUpgradeView: Failed to load products: \(error)")
+            //print("❌ PremiumUpgradeView: Failed to load products: \(error)")
         }
     }
 
@@ -362,7 +362,7 @@ struct PremiumUpgradeView: View {
             dismiss()
         } catch {
             // Handle purchase error
-            print("Yearly purchase failed: \(error)")
+            //print("Yearly purchase failed: \(error)")
         }
     }
 
@@ -375,7 +375,7 @@ struct PremiumUpgradeView: View {
             dismiss()
         } catch {
             // Handle purchase error
-            print("Monthly purchase failed: \(error)")
+            //print("Monthly purchase failed: \(error)")
         }
     }
 
@@ -384,7 +384,7 @@ struct PremiumUpgradeView: View {
             try await purchaseManager.restorePurchases()
         } catch {
             // Handle restore error
-            print("Restore failed: \(error)")
+            //print("Restore failed: \(error)")
         }
     }
 

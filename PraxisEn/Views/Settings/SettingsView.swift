@@ -352,9 +352,9 @@ struct SettingsView: View {
             await MainActor.run {
                 settings = newSettings
             }
-            //print("✅ Created default user settings")
+            ////print("✅ Created default user settings")
         } catch {
-            //print("❌ Error creating settings: \(error)")
+            ////print("❌ Error creating settings: \(error)")
         }
     }
 
@@ -374,9 +374,9 @@ struct SettingsView: View {
             DispatchQueue.main.async {
                 self.settings = settings
             }
-            //print("✅ Updated learning mode: \(mode.displayName)")
+            ////print("✅ Updated learning mode: \(mode.displayName)")
         } catch {
-            //print("❌ Error updating settings: \(error)")
+            ////print("❌ Error updating settings: \(error)")
         }
     }
 
@@ -408,9 +408,9 @@ struct SettingsView: View {
 
             self.settings = settings
 
-            //print("🔄 Successfully reset all learning progress")
+            ////print("🔄 Successfully reset all learning progress")
         } catch {
-            //print("❌ Error resetting progress: \(error)")
+            ////print("❌ Error resetting progress: \(error)")
         }
     }
 
@@ -526,7 +526,7 @@ struct SettingsView: View {
         do {
             try await PurchaseManager.shared.restorePurchases()
         } catch {
-            print("Restore failed: \(error)")
+            //print("Restore failed: \(error)")
         }
     }
 

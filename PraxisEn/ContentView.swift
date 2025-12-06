@@ -131,54 +131,54 @@ struct ContentView: View {
 
     @MainActor
     private func initializeApp() async {
-        print("🚀 Starting fast offline initialization...")
+        //print("🚀 Starting fast offline initialization...")
 
         do {
             // Phase 1: Quick Database Check (should be immediate for offline)
             initializationState = .databaseSetup
-            print("📁 Checking database...")
+            //print("📁 Checking database...")
 
             try await setupDatabaseFast()
 
             // Phase 2: Initialize Services in Background (don't block)
-            print("💳 Initializing services...")
+            //print("💳 Initializing services...")
             await setupServicesFast()
 
             // Phase 3: Load Content (fast for offline)
             initializationState = .contentLoading
-            print("📚 Loading content...")
+            //print("📚 Loading content...")
 
             try await setupContentFast()
 
             // Phase 4: Ready
             initializationState = .ready
-            print("✅ Fast initialization complete!")
+            //print("✅ Fast initialization complete!")
 
         } catch {
             let errorMsg = "Initialization failed: \(error.localizedDescription)"
-            print("❌ \(errorMsg)")
+            //print("❌ \(errorMsg)")
             errorMessage = errorMsg
             initializationState = .error(errorMsg)
         }
     }
 
     private func setupDatabaseFast() async throws {
-        print("🔧 Initializing database setup...")
+        //print("🔧 Initializing database setup...")
 
         do {
             // ALWAYS trigger database setup to ensure sentences are set up
             try await DatabaseManager.shared.setupDatabasesIfNeeded()
-            print("✅ Database setup completed")
+            //print("✅ Database setup completed")
         } catch {
-            print("⚠️ Database setup failed: \(error)")
+            //print("⚠️ Database setup failed: \(error)")
             // Don't throw error - continue with limited functionality
         }
 
         // Check final status
         if DatabaseManager.shared.isDatabaseSetupComplete() {
-            print("✅ Database ready")
+            //print("✅ Database ready")
         } else {
-            print("⚠️ Database setup incomplete, proceeding anyway...")
+            //print("⚠️ Database setup incomplete, proceeding anyway...")
         }
     }
 
@@ -191,9 +191,9 @@ struct ContentView: View {
             do {
                 try await PurchaseManager.shared.loadProducts()
                 await PurchaseManager.shared.checkSubscriptionStatus()
-                print("✅ Subscription services ready")
+                //print("✅ Subscription services ready")
             } catch {
-                print("⚠️ Subscription setup failed, but continuing: \(error)")
+                //print("⚠️ Subscription setup failed, but continuing: \(error)")
             }
         }
     }
@@ -208,7 +208,7 @@ struct ContentView: View {
 
         // Load first word - NO timeout or complex TaskGroup for offline
         // Just load directly, if it fails we'll handle it gracefully
-        print("🔄 Loading first word...")
+        //print("🔄 Loading first word...")
         await vm.loadNextWord()
 
         // Update progress counts (quick operations)
@@ -216,7 +216,7 @@ struct ContentView: View {
         await vm.updateTotalWordsCount()
         await vm.updateB2WordsCount()
 
-        print("✅ Content loading complete")
+        //print("✅ Content loading complete")
     }
 
     // MARK: - Error Types

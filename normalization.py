@@ -32,11 +32,11 @@ def clean_database():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    print("Fetching data...")
+    //print("Fetching data...")
     cursor.execute(f"SELECT {COLUMN_ID}, {COLUMN_TEXT} FROM {TABLE_NAME}")
     rows = cursor.fetchall()
     
-    print(f"Total rows fetched: {len(rows)}")
+    //print(f"Total rows fetched: {len(rows)}")
 
     # Step 1: Pre-process data
     # We create a list of dicts to make sorting and accessing easier
@@ -50,13 +50,13 @@ def clean_database():
 
     # Step 2: Sort data by the cleaned text
     # This brings "I love dog" and "I love dogs" next to each other
-    print("Sorting data for comparison...")
+    //print("Sorting data for comparison...")
     data.sort(key=lambda x: x['clean'])
 
     ids_to_delete = set()
     
     # Step 3: Iterate and Compare
-    print("Scanning for duplicates (this may take time)...")
+    //print("Scanning for duplicates (this may take time)...")
     
     # We use a window approach. We compare current item `i` with the next `WINDOW_SIZE` items.
     for i in tqdm(range(len(data))):
@@ -95,19 +95,19 @@ def clean_database():
                 if ratio >= SIMILARITY_THRESHOLD:
                     # Found a very similar sentence. 
                     # We keep the one with the lower ID (original) by default.
-                    print(f"Match found ({ratio:.2f}):")
-                    print(f"  KEEP:   {current_row['text']}")
-                    print(f"  DELETE: {next_row['text']}")
+                    //print(f"Match found ({ratio:.2f}):")
+                    //print(f"  KEEP:   {current_row['text']}")
+                    //print(f"  DELETE: {next_row['text']}")
                     ids_to_delete.add(next_row['id'])
 
     # Step 4: Execute Deletion
     count = len(ids_to_delete)
     if count > 0:
-        print(f"\nFound {count} duplicates to delete.")
+        //print(f"\nFound {count} duplicates to delete.")
         user_input = input("Type 'YES' to confirm deletion: ")
         
         if user_input == 'YES':
-            print("Deleting...")
+            //print("Deleting...")
             # Delete in batches to handle SQLite limits
             id_list = list(ids_to_delete)
             batch_size = 900
@@ -117,13 +117,13 @@ def clean_database():
                 cursor.execute(f"DELETE FROM {TABLE_NAME} WHERE {COLUMN_ID} IN ({placeholders})", batch)
             
             conn.commit()
-            print("Deletion complete.")
+            //print("Deletion complete.")
             # Optional: Vacuum to reclaim space
             # cursor.execute("VACUUM") 
         else:
-            print("Operation cancelled.")
+            //print("Operation cancelled.")
     else:
-        print("No duplicates found with current settings.")
+        //print("No duplicates found with current settings.")
 
     conn.close()
 

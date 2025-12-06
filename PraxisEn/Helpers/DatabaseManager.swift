@@ -73,33 +73,33 @@ class DatabaseManager {
         let documentsURL = try getDocumentsDirectory()
         let destinationURL = documentsURL.appendingPathComponent(fileName)
 
-        print("📁 Setting up sentences database...")
-        print("🔍 Documents path: \(documentsURL.path)")
-        print("🔍 Destination URL: \(destinationURL.path)")
+        //print("📁 Setting up sentences database...")
+        //print("🔍 Documents path: \(documentsURL.path)")
+        //print("🔍 Destination URL: \(destinationURL.path)")
 
         // Check if already exists
         if FileManager.default.fileExists(atPath: destinationURL.path) {
-            print("✅ Sentences DB already exists at Documents")
+            //print("✅ Sentences DB already exists at Documents")
 
             // Check if the existing file has content and tables
             if let attributes = try? FileManager.default.attributesOfItem(atPath: destinationURL.path),
                let fileSize = attributes[.size] as? Int64 {
-                print("📊 Existing DB file size: \(fileSize) bytes")
+                //print("📊 Existing DB file size: \(fileSize) bytes")
 
                 if fileSize == 0 {
-                    print("⚠️ Existing DB file is empty! Will re-copy from bundle.")
+                    //print("⚠️ Existing DB file is empty! Will re-copy from bundle.")
                     try? FileManager.default.removeItem(at: destinationURL)
                 } else {
                     // Try to check if database has tables
                     if let db = try? openDatabase(at: destinationURL.path) {
                         let hasTables = checkIfTablesExist(db: db)
-                        print("📋 Existing DB has tables: \(hasTables)")
+                        //print("📋 Existing DB has tables: \(hasTables)")
                         sqlite3_close(db)
 
                         if hasTables {
                             return false // All good, proceed
                         } else {
-                            print("⚠️ Existing DB has no tables! Will re-copy from bundle.")
+                            //print("⚠️ Existing DB has no tables! Will re-copy from bundle.")
                             try? FileManager.default.removeItem(at: destinationURL)
                         }
                     }
@@ -112,34 +112,34 @@ class DatabaseManager {
         }
 
         // Use ODR to download sentences database
-        print("📥 Using ODR to download sentences database...")
+        //print("📥 Using ODR to download sentences database...")
         let resourceRequest = NSBundleResourceRequest(tags: ["all_media"])
 
         do {
             try await resourceRequest.beginAccessingResources()
-            print("✅ ODR resources accessed successfully")
+            //print("✅ ODR resources accessed successfully")
 
             // Try to find sentences.db in ODR resources
             if let odrURL = Bundle.main.url(forResource: "sentences", withExtension: "db") {
-                print("✅ Found sentences.db via ODR: \(odrURL.path)")
+                //print("✅ Found sentences.db via ODR: \(odrURL.path)")
 
                 // Check ODR file size
                 if let attributes = try? FileManager.default.attributesOfItem(atPath: odrURL.path),
                    let fileSize = attributes[.size] as? Int64 {
-                    print("📊 ODR file size: \(fileSize) bytes")
+                    //print("📊 ODR file size: \(fileSize) bytes")
                 }
 
                 try FileManager.default.copyItem(at: odrURL, to: destinationURL)
-                print("✅ Copied \(fileName) from ODR to Documents")
+                //print("✅ Copied \(fileName) from ODR to Documents")
                 resourceRequest.endAccessingResources()
                 return true
             } else {
-                print("❌ sentences.db NOT FOUND even in ODR resources!")
+                //print("❌ sentences.db NOT FOUND even in ODR resources!")
                 resourceRequest.endAccessingResources()
                 throw DatabaseError.bundleFileNotFound(fileName)
             }
         } catch {
-            print("❌ Failed to access ODR resources: \(error)")
+            //print("❌ Failed to access ODR resources: \(error)")
             throw DatabaseError.bundleFileNotFound(fileName)
         }
     }
@@ -281,7 +281,7 @@ class DatabaseManager {
         // Final save
         try modelContext.save()
 
-        //print("✅ Imported \(importedCount) sentence pairs to SwiftData")
+        ////print("✅ Imported \(importedCount) sentence pairs to SwiftData")
         return importedCount
     }
 
@@ -295,13 +295,13 @@ class DatabaseManager {
         let documentsURL = try getDocumentsDirectory()
         let dbURL = documentsURL.appendingPathComponent("sentences.db")
 
-        print("🗄️ Opening sentences database at: \(dbURL.path)")
-        print("📁 Database file exists: \(FileManager.default.fileExists(atPath: dbURL.path))")
+        //print("🗄️ Opening sentences database at: \(dbURL.path)")
+        //print("📁 Database file exists: \(FileManager.default.fileExists(atPath: dbURL.path))")
 
         var db: OpaquePointer?
         guard sqlite3_open(dbURL.path, &db) == SQLITE_OK else {
             let errorMessage = String(cString: sqlite3_errmsg(db))
-            print("❌ Failed to open sentences database: \(errorMessage)")
+            //print("❌ Failed to open sentences database: \(errorMessage)")
             throw DatabaseError.cannotOpenDatabase
         }
         defer { sqlite3_close(db) }
@@ -311,27 +311,27 @@ class DatabaseManager {
         var tableStatement: OpaquePointer?
         let tableResult = sqlite3_prepare_v2(db, tableQuery, -1, &tableStatement, nil)
         if tableResult == SQLITE_OK {
-            print("📋 Tables in database:")
+            //print("📋 Tables in database:")
             while sqlite3_step(tableStatement) == SQLITE_ROW {
                 if let tableName = sqlite3_column_text(tableStatement, 0) {
                     let name = String(cString: tableName)
-                    print("  - \(name)")
+                    //print("  - \(name)")
                 }
             }
             sqlite3_finalize(tableStatement)
         } else {
             let errorMsg = String(cString: sqlite3_errmsg(db))
-            print("❌ Could not query table list, SQLite error: \(errorMsg)")
+            //print("❌ Could not query table list, SQLite error: \(errorMsg)")
 
             // Try alternative query
             let altQuery = "SELECT name FROM sqlite_master"
             var altStatement: OpaquePointer?
             if sqlite3_prepare_v2(db, altQuery, -1, &altStatement, nil) == SQLITE_OK {
-                print("📋 All sqlite_master entries:")
+                //print("📋 All sqlite_master entries:")
                 while sqlite3_step(altStatement) == SQLITE_ROW {
                     if let name = sqlite3_column_text(altStatement, 0) {
                         let nameStr = String(cString: name)
-                        print("  - \(nameStr)")
+                        //print("  - \(nameStr)")
                     }
                 }
                 sqlite3_finalize(altStatement)
@@ -350,8 +350,8 @@ class DatabaseManager {
         let prepareResult = sqlite3_prepare_v2(db, query, -1, &statement, nil)
         guard prepareResult == SQLITE_OK else {
             let errorMessage = String(cString: sqlite3_errmsg(db))
-            print("❌ SQLite prepare failed with code \(prepareResult): \(errorMessage)")
-            print("🔍 Query was: \(query)")
+            //print("❌ SQLite prepare failed with code \(prepareResult): \(errorMessage)")
+            //print("🔍 Query was: \(query)")
             throw DatabaseError.queryPreparationFailed
         }
         defer { sqlite3_finalize(statement) }
@@ -361,7 +361,7 @@ class DatabaseManager {
         sqlite3_bind_text(statement, 1, (searchPattern as NSString).utf8String, -1, SQLITE_TRANSIENT)
         sqlite3_bind_int(statement, 2, Int32(limit * 5)) // Fetch more for filtering
 
-        //print("🔎 Searching English text with pattern: '\(searchPattern)'")
+        ////print("🔎 Searching English text with pattern: '\(searchPattern)'")
 
         var allResults: [SentencePair] = []
 
@@ -381,7 +381,7 @@ class DatabaseManager {
             ))
         }
 
-        print("📥 SQL returned \(allResults.count) sentences, filtering for whole word matches...")
+        //print("📥 SQL returned \(allResults.count) sentences, filtering for whole word matches...")
 
         // Filter for whole word matches using Swift regex
         let wordPattern = try! NSRegularExpression(pattern: "\\b\(NSRegularExpression.escapedPattern(for: word))\\b", options: .caseInsensitive)
@@ -390,7 +390,7 @@ class DatabaseManager {
             return wordPattern.firstMatch(in: sentence.englishText, range: range) != nil
         }.prefix(limit)
 
-        print("✅ Found \(results.count) whole-word matches for '\(word)'")
+        //print("✅ Found \(results.count) whole-word matches for '\(word)'")
         return Array(results)
     }
 
@@ -532,7 +532,7 @@ class DatabaseManager {
             while sqlite3_step(statement) == SQLITE_ROW {
                 if let tableName = sqlite3_column_text(statement, 0) {
                     let name = String(cString: tableName)
-                    print("  Found table: \(name)")
+                    //print("  Found table: \(name)")
                 }
             }
             return true // At least we can query the database

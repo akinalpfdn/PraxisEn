@@ -137,7 +137,7 @@ extension LocalImageService {
             }
 
         } catch {
-            //print("❌ [LocalImageService] Error listing resource files: \(error)")
+            ////print("❌ [LocalImageService] Error listing resource files: \(error)")
         }
 
         return imageFiles.sorted()

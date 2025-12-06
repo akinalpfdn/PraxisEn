@@ -45,7 +45,7 @@ class LearnedFlashcardViewModel: ObservableObject {
             // Shuffle the words for random flashcard order
             self.allLearnedWords = fetchedWords.shuffled()
         } catch {
-            //print("Failed to fetch learned words: \(error)")
+            ////print("Failed to fetch learned words: \(error)")
             self.allLearnedWords = []
         }
 
@@ -133,7 +133,7 @@ class LearnedFlashcardViewModel: ObservableObject {
             self.exampleSentences = try await databaseManager.searchSentences(containing: word, limit: 10)
         } catch {
             self.exampleSentences = []
-            //print("Failed to fetch sentences for \(word): \(error)")
+            ////print("Failed to fetch sentences for \(word): \(error)")
         }
     }
 

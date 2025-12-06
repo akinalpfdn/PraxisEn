@@ -228,7 +228,7 @@ class SpacedRepetitionManager {
             let available = levelWords.filter { !recentIDs.contains($0.word) }
 
             if !available.isEmpty {
-                //print("📚 Selected new word from level: \(level)")
+                ////print("📚 Selected new word from level: \(level)")
                 return available.randomElement()
             }
         }

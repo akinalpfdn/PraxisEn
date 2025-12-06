@@ -31,19 +31,19 @@ class AudioManager {
         guard let audioPath = Bundle.main.path(forResource: fileName, ofType: "mp3") else {
             // For debugging: list some available audio files in bundle
             let resourcePath = Bundle.main.resourcePath ?? "unknown"
-            print("🔍 Bundle resource path: \(resourcePath)")
+            //print("🔍 Bundle resource path: \(resourcePath)")
 
             // Try to list some MP3 files that might be in the bundle
             let testFiles = ["hello", "yes", "no", "same", "thank", word]
             for testFile in testFiles {
                 if Bundle.main.path(forResource: testFile, ofType: "mp3") != nil {
-                    print("✅ Found audio file: \(testFile).mp3")
+                    //print("✅ Found audio file: \(testFile).mp3")
                 } else {
-                    print("❌ Missing audio file: \(testFile).mp3")
+                    //print("❌ Missing audio file: \(testFile).mp3")
                 }
             }
 
-            print("⚠️ Audio file not found for word: \(word)")
+            //print("⚠️ Audio file not found for word: \(word)")
             return
         }
 
@@ -55,9 +55,9 @@ class AudioManager {
             audioPlayer?.rate = 0.8  // Play at 80% speed
             audioPlayer?.prepareToPlay()
             audioPlayer?.play()
-            print("🔊 Playing audio for: \(word) at 0.8x speed")
+            //print("🔊 Playing audio for: \(word) at 0.8x speed")
         } catch {
-            print("❌ Error playing audio for \(word): \(error.localizedDescription)")
+            //print("❌ Error playing audio for \(word): \(error.localizedDescription)")
         }
     }
 

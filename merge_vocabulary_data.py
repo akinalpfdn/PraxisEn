@@ -14,12 +14,12 @@ def load_csv_with_encoding(filepath):
     for encoding in encodings:
         try:
             df = pd.read_csv(filepath, encoding=encoding)
-            //print(f"✅ Loaded {filepath} with {encoding} encoding")
+            ////print(f"✅ Loaded {filepath} with {encoding} encoding")
             return df
         except UnicodeDecodeError:
             continue
         except Exception as e:
-            //print(f"❌ Error with {encoding}: {e}")
+            ////print(f"❌ Error with {encoding}: {e}")
             continue
 
     raise ValueError(f"Could not load {filepath} with any encoding")
@@ -27,15 +27,15 @@ def load_csv_with_encoding(filepath):
 def merge_vocabulary_data():
     """Merge vocabulary CSV with word levels"""
 
-    //print("📚 Loading vocabulary dataset...")
+    ////print("📚 Loading vocabulary dataset...")
     vocab_df = load_csv_with_encoding('oxford3000_vocabulary_with_collocations_and_definitions_datasets.csv')
 
-    //print("📊 Loading word levels...")
+    ////print("📊 Loading word levels...")
     levels_df = load_csv_with_encoding('oxford3000_word_levels.csv')
 
-    //print(f"\n📈 Initial counts:")
-    //print(f"  Vocabulary entries: {len(vocab_df)}")
-    //print(f"  Word levels: {len(levels_df)}")
+    ////print(f"\n📈 Initial counts:")
+    ////print(f"  Vocabulary entries: {len(vocab_df)}")
+    ////print(f"  Word levels: {len(levels_df)}")
 
     # Normalize word columns for matching
     vocab_df['word_normalized'] = vocab_df['Word'].str.lower().str.strip()
@@ -71,34 +71,34 @@ def merge_vocabulary_data():
     output_file = 'vocabulary_with_levels.csv'
     merged_df.to_csv(output_file, index=False, encoding='utf-8')
 
-    //print(f"\n✅ Merged data saved to {output_file}")
-    //print(f"📊 Total vocabulary entries: {len(merged_df)}")
+    ////print(f"\n✅ Merged data saved to {output_file}")
+    ////print(f"📊 Total vocabulary entries: {len(merged_df)}")
 
     # Statistics
     level_counts = merged_df['level'].value_counts().sort_index()
-    //print("\n📊 Level distribution in vocabulary:")
+    ////print("\n📊 Level distribution in vocabulary:")
     for level in ['A1', 'A2', 'B1', 'B2', 'Unknown']:
         count = level_counts.get(level, 0)
         if count > 0:
-            //print(f"  {level}: {count:4d} words")
+            ////print(f"  {level}: {count:4d} words")
 
     # Check match rate
     matched = merged_df['level'].notna().sum()
     match_rate = (matched / len(merged_df)) * 100
-    //print(f"\n✨ Match rate: {match_rate:.1f}% ({matched}/{len(merged_df)} words matched with levels)")
+    ////print(f"\n✨ Match rate: {match_rate:.1f}% ({matched}/{len(merged_df)} words matched with levels)")
 
     # Show sample
-    //print("\n📝 Sample merged data (first 10 rows):")
-    //print(merged_df[['word', 'level', 'part_of_speech', 'turkish_translation']].head(10).to_string(index=False))
+    ////print("\n📝 Sample merged data (first 10 rows):")
+    ////print(merged_df[['word', 'level', 'part_of_speech', 'turkish_translation']].head(10).to_string(index=False))
 
     return merged_df
 
 def main():
     try:
         merged_df = merge_vocabulary_data()
-        //print("\n🎉 Merge completed successfully!")
+        ////print("\n🎉 Merge completed successfully!")
     except Exception as e:
-        //print(f"\n❌ Error: {e}")
+        ////print(f"\n❌ Error: {e}")
         import traceback
         traceback.print_exc()
 

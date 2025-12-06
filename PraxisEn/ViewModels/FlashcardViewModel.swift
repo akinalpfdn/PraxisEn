@@ -136,7 +136,7 @@ class FlashcardViewModel: ObservableObject {
 
             // If all free levels are completed, show level restriction alert for B2
             if completedLevels.count == unlockedLevels.count && completedLevels.count >= 3 {
-                print("🎯 All free levels completed, showing level restriction alert for B2")
+                //print("🎯 All free levels completed, showing level restriction alert for B2")
                 showLevelRestrictionAlert = true
                 return
             }
@@ -144,9 +144,9 @@ class FlashcardViewModel: ObservableObject {
 
         // Default behavior - just log the situation
         if settings.allLevelsCompleted {
-            print("🎉 All levels completed including B2!")
+            //print("🎉 All levels completed including B2!")
         } else {
-            print("📚 No more words available in current target levels")
+            //print("📚 No more words available in current target levels")
         }
     }
 
@@ -184,7 +184,7 @@ class FlashcardViewModel: ObservableObject {
         do {
             try modelContext.save()
         } catch {
-            //print("❌ Error updating settings progress: \(error)")
+            ////print("❌ Error updating settings progress: \(error)")
         }
     }
 
@@ -249,7 +249,7 @@ class FlashcardViewModel: ObservableObject {
         }
 
         guard currentIndex > 0 else {
-            //print("ℹ️ No previous word")
+            ////print("ℹ️ No previous word")
             return
         }
 
@@ -295,7 +295,7 @@ class FlashcardViewModel: ObservableObject {
         // Check if already cached first
         if let cachedImage = await ImageCache.shared.get(word.word) {
             currentPhoto = cachedImage
-            //print("📸 Using cached image for: \(word.word)")
+            ////print("📸 Using cached image for: \(word.word)")
             return
         }
 
@@ -309,11 +309,11 @@ class FlashcardViewModel: ObservableObject {
     /// Load example sentences for current word (max 10)
     private func loadExamplesForCurrentWord() async {
         guard let word = currentWord else {
-            print("⚠️ No current word to load examples for")
+            //print("⚠️ No current word to load examples for")
             return
         }
 
-        print("🔍 Loading examples for word: '\(word.word)'")
+        //print("🔍 Loading examples for word: '\(word.word)'")
 
         // Show loading state first
         await MainActor.run {
@@ -327,7 +327,7 @@ class FlashcardViewModel: ObservableObject {
                 limit: 10
             )
 
-            print("📝 Found \(sentences.count) raw sentences for '\(word.word)'")
+            //print("📝 Found \(sentences.count) raw sentences for '\(word.word)'")
 
             // Filter and limit to best examples
             let filtered = sentences
@@ -335,14 +335,14 @@ class FlashcardViewModel: ObservableObject {
                 .sorted { $0.difficultyTier < $1.difficultyTier } // Easier first
                 .prefix(SubscriptionManager.shared.getMaxSentencesPerWord())
 
-            print("✅ After filtering: \(filtered.count) sentences for '\(word.word)'")
+            //print("✅ After filtering: \(filtered.count) sentences for '\(word.word)'")
 
             await MainActor.run {
                 exampleSentences = Array(filtered)
             }
 
         } catch {
-            print("❌ Failed to load examples for '\(word.word)': \(error)")
+            //print("❌ Failed to load examples for '\(word.word)': \(error)")
             // Keep showing loading state instead of empty array
             // The UI should show "Example sentences loading..." when array is empty
         }
@@ -377,9 +377,9 @@ class FlashcardViewModel: ObservableObject {
 
         do {
             try modelContext.save()
-            //print("✅ Word marked as learned: \(word.word)")
+            ////print("✅ Word marked as learned: \(word.word)")
         } catch {
-            //print("❌ Error saving learned state: \(error)")
+            ////print("❌ Error saving learned state: \(error)")
         }
     }
 
@@ -391,9 +391,9 @@ class FlashcardViewModel: ObservableObject {
 
         do {
             try modelContext.save()
-            //print("✅ Word reviewed: \(word.word) (count: \(word.reviewCount))")
+            ////print("✅ Word reviewed: \(word.word) (count: \(word.reviewCount))")
         } catch {
-            //print("❌ Error saving review: \(error)")
+            ////print("❌ Error saving review: \(error)")
         }
     }
 
@@ -683,7 +683,7 @@ class FlashcardViewModel: ObservableObject {
         if let firstSettings = settings.first {
             userSettings = firstSettings
             await updateSettingsProgress(settings: firstSettings)
-            //print("✅ Loaded user settings: \(firstSettings.wordSelectionMode.displayName)")
+            ////print("✅ Loaded user settings: \(firstSettings.wordSelectionMode.displayName)")
         } else {
             // Create default settings if none exist
             let defaultSettings = UserSettings()
@@ -693,9 +693,9 @@ class FlashcardViewModel: ObservableObject {
                 try modelContext.save()
                 userSettings = defaultSettings
                 await updateSettingsProgress(settings: defaultSettings)
-                //print("✅ Created default user settings")
+                ////print("✅ Created default user settings")
             } catch {
-                //print("❌ Error creating default settings: \(error)")
+                ////print("❌ Error creating default settings: \(error)")
             }
         }
     }

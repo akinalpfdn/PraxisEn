@@ -36,22 +36,22 @@ class PurchaseManager: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        print("🛒 Starting to load products with IDs: \(productIDs)")
+        //print("🛒 Starting to load products with IDs: \(productIDs)")
 
         do {
             products = try await Product.products(for: productIDs)
-            print("✅ Loaded \(products.count) products:")
+            //print("✅ Loaded \(products.count) products:")
             for product in products {
-                print("   - \(product.id): \(product.displayPrice) (\(product.type))")
+                //print("   - \(product.id): \(product.displayPrice) (\(product.type))")
             }
 
             // Check if specific products are available
-            print("📦 Monthly product available: \(monthlyPremiumProduct != nil)")
-            print("📦 Yearly product available: \(yearlyPremiumProduct != nil)")
+            //print("📦 Monthly product available: \(monthlyPremiumProduct != nil)")
+            //print("📦 Yearly product available: \(yearlyPremiumProduct != nil)")
 
         } catch {
-            print("❌ Failed to load products: \(error)")
-            print("❌ Error details: \(error.localizedDescription)")
+            //print("❌ Failed to load products: \(error)")
+            //print("❌ Error details: \(error.localizedDescription)")
             throw PurchaseError.productLoadFailed
         }
     }
@@ -104,18 +104,18 @@ class PurchaseManager: ObservableObject {
 
                 await transaction.finish() // Consume the transaction
                 purchaseState = .purchased
-                print("✅ Premium purchase successful")
+                //print("✅ Premium purchase successful")
 
                 return transaction
 
             case .pending:
                 purchaseState = .pending
-                print("📱 Purchase pending, requires approval")
+                //print("📱 Purchase pending, requires approval")
                 throw PurchaseError.purchasePending
 
             case .userCancelled:
                 purchaseState = .cancelled
-                print("❌ Purchase cancelled by user")
+                //print("❌ Purchase cancelled by user")
                 throw PurchaseError.purchaseCancelled
 
             @unknown default:
@@ -125,7 +125,7 @@ class PurchaseManager: ObservableObject {
 
         } catch {
             purchaseState = .failed
-            print("❌ Purchase failed: \(error)")
+            //print("❌ Purchase failed: \(error)")
             throw error is PurchaseError ? error : PurchaseError.purchaseFailed
         }
     }
@@ -176,16 +176,16 @@ class PurchaseManager: ObservableObject {
                     expirationDate: subscriptionExpiration
                 )
                 purchaseState = .restored
-                print("✅ Premium subscription restored")
+                //print("✅ Premium subscription restored")
             } else {
                 await SubscriptionManager.shared.deactivatePremiumSubscription()
                 purchaseState = .idle
-                print("ℹ️ No active subscription found")
+                //print("ℹ️ No active subscription found")
             }
 
         } catch {
             purchaseState = .failed
-            print("❌ Restore failed: \(error)")
+            //print("❌ Restore failed: \(error)")
             throw error is PurchaseError ? error : PurchaseError.restoreFailed
         }
     }
@@ -226,14 +226,14 @@ class PurchaseManager: ObservableObject {
                     startDate: startDate,
                     expirationDate: subscriptionExpiration
                 )
-                print("✅ Active subscription verified")
+                //print("✅ Active subscription verified")
             } else {
                 SubscriptionManager.shared.refreshSubscriptionStatus()
-                print("ℹ️ No active subscription")
+                //print("ℹ️ No active subscription")
             }
 
         } catch {
-            print("❌ Subscription status check failed: \(error)")
+            //print("❌ Subscription status check failed: \(error)")
             SubscriptionManager.shared.refreshSubscriptionStatus()
         }
     }
@@ -259,7 +259,7 @@ class PurchaseManager: ObservableObject {
             }
             return nil
         } catch {
-            print("❌ Failed to get subscription info: \(error)")
+            //print("❌ Failed to get subscription info: \(error)")
             return nil
         }
     }
@@ -294,7 +294,7 @@ class PurchaseManager: ObservableObject {
                     await transaction.finish()
 
                 } catch {
-                    print("❌ Transaction verification failed: \(error)")
+                    //print("❌ Transaction verification failed: \(error)")
                 }
             }
         }
@@ -311,15 +311,15 @@ class PurchaseManager: ObservableObject {
                     startDate: transaction.purchaseDate,
                     expirationDate: transaction.expirationDate
                 )
-                print("✅ Subscription activated/updated")
+                //print("✅ Subscription activated/updated")
             } else {
                 SubscriptionManager.shared.deactivatePremiumSubscription()
-                print("ℹ️ Subscription expired")
+                //print("ℹ️ Subscription expired")
             }
         } else {
             // Subscription was revoked
             SubscriptionManager.shared.deactivatePremiumSubscription()
-            print("ℹ️ Subscription revoked")
+            //print("ℹ️ Subscription revoked")
         }
     }
 }

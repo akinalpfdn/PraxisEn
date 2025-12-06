@@ -36,7 +36,7 @@ struct PraxisEnApp: App {
                 for: schema,
                 configurations: [modelConfiguration]
             )
-            ////print("✅ SwiftData ModelContainer initialized")
+            //////print("✅ SwiftData ModelContainer initialized")
             return container
         } catch {
             fatalError("Could not create ModelContainer: \(error)")

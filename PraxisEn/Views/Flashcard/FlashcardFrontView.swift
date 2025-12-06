@@ -161,7 +161,7 @@ struct BlurView: UIViewRepresentable {
             level: "B2",
             photo: UIImage(systemName: "photo"),
             isLoadingPhoto: false,
-            onPlayAudio: { //print("Play audio")
+            onPlayAudio: { ////print("Play audio")
             }
         )
 
@@ -171,7 +171,7 @@ struct BlurView: UIViewRepresentable {
             level: "A1",
             photo: nil,
             isLoadingPhoto: true,
-            onPlayAudio: { //print("Play audio")
+            onPlayAudio: { ////print("Play audio")
             }
         )
 
@@ -181,7 +181,7 @@ struct BlurView: UIViewRepresentable {
             level: "A2",
             photo: nil,
             isLoadingPhoto: false,
-            onPlayAudio: { //print("Play audio")
+            onPlayAudio: { ////print("Play audio")
             }
         )
     }
