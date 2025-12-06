@@ -25,7 +25,8 @@ struct DailyLimitExceededView: View {
                         .font(AppTypography.bodyText)
                         .foregroundColor(.textSecondary)
                         .multilineTextAlignment(.center)
-                        .lineLimit(nil) // Allows text to wrap to multiple lines
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true) // Allow vertical expansion
                         .padding(.horizontal, AppSpacing.md)
                 }
 
