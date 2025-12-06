@@ -176,11 +176,9 @@ class PurchaseManager: ObservableObject {
                     expirationDate: subscriptionExpiration
                 )
                 purchaseState = .restored
-                //print("✅ Premium subscription restored")
             } else {
                 await SubscriptionManager.shared.deactivatePremiumSubscription()
                 purchaseState = .idle
-                //print("ℹ️ No active subscription found")
             }
 
         } catch {
