@@ -184,18 +184,15 @@ struct PremiumUpgradeView: View {
                         .font(AppTypography.captionText)
                         .foregroundColor(.textTertiary)
                     
-                    HStack(spacing: AppSpacing.xs) {
-                        if let yearlyProduct = purchaseManager.yearlyPremiumProduct {
-                            let monthlyPrice = yearlyProduct.price / 12
-                            Text("£\(String(format: "%.2f", NSDecimalNumber(decimal: monthlyPrice).doubleValue))/mo")
-                                .font(.system(size: AppTypography.headline, weight: .bold))
-                                .foregroundColor(.textSecondary)
-
-                            Text("£\(yearlyProduct.displayPrice)/year")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.accentOrange)
-                        }
-                    }
+                    if let yearlyProduct = purchaseManager.yearlyPremiumProduct {
+                    Text(yearlyProduct.displayPrice + "/year")
+                        .font(.system(size: AppTypography.headline, weight: .bold))
+                        .foregroundColor(.textSecondary)
+                } else {
+                    Text("Loading...")
+                        .font(.system(size: AppTypography.headline, weight: .bold))
+                        .foregroundColor(.textSecondary)
+                }
                 }
                 
                 Spacer()
@@ -248,7 +245,11 @@ struct PremiumUpgradeView: View {
                         .foregroundColor(.textTertiary)
                     
                     if let monthlyProduct = purchaseManager.monthlyPremiumProduct {
-                        Text(monthlyProduct.displayPrice)
+                        Text(monthlyProduct.displayPrice + "/month")
+                            .font(.system(size: AppTypography.headline, weight: .bold))
+                            .foregroundColor(.textSecondary)
+                    } else {
+                        Text("Loading...")
                             .font(.system(size: AppTypography.headline, weight: .bold))
                             .foregroundColor(.textSecondary)
                     }
@@ -333,7 +334,7 @@ struct PremiumUpgradeView: View {
     }
     
     // MARK: - Actions
-    
+
     private func loadProducts() async {
         //print("🔄 PremiumUpgradeView: Starting to load products...")
         //print("🔄 PurchaseManager isLoading: \(purchaseManager.isLoading)")
