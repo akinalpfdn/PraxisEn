@@ -159,14 +159,25 @@ struct PremiumUpgradeView: View {
                         Text("Premium Yearly")
                             .font(AppTypography.cardTitle)
                             .foregroundColor(.textPrimary)
-                        
-                        Text("SAVE 50%")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.success)
-                            .cornerRadius(4)
+
+                        if let yearlyProduct = purchaseManager.yearlyPremiumProduct,
+                           let monthlyProduct = purchaseManager.monthlyPremiumProduct {
+                            // Convert to Double for reliable calculation
+                            let yearlyPrice = NSDecimalNumber(decimal: yearlyProduct.price).doubleValue
+                            let monthlyPrice = NSDecimalNumber(decimal: monthlyProduct.price).doubleValue
+                            let twelveMonthsPrice = monthlyPrice * 12
+                            let discountAmount = twelveMonthsPrice - yearlyPrice
+                            let discountPercentage = (discountAmount / twelveMonthsPrice) * 100
+                            let discountInt = Int(round(discountPercentage))
+
+                            Text("SAVE \(discountInt)%")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.success)
+                                .cornerRadius(4)
+                        }
                     }
                     
                     Text("Best value, billed yearly")
@@ -174,14 +185,16 @@ struct PremiumUpgradeView: View {
                         .foregroundColor(.textTertiary)
                     
                     HStack(spacing: AppSpacing.xs) {
-                        Text("£2.49/mo")
-                            .font(.system(size: AppTypography.headline, weight: .bold))
-                            .foregroundColor(.accentOrange)
-                        
-                        Text("£29.99/year")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.textSecondary)
-                            .strikethrough()
+                        if let yearlyProduct = purchaseManager.yearlyPremiumProduct {
+                            let monthlyPrice = yearlyProduct.price / 12
+                            Text("£\(String(format: "%.2f", NSDecimalNumber(decimal: monthlyPrice).doubleValue))/mo")
+                                .font(.system(size: AppTypography.headline, weight: .bold))
+                                .foregroundColor(.textSecondary)
+
+                            Text("£\(yearlyProduct.displayPrice)/year")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.accentOrange)
+                        }
                     }
                 }
                 
@@ -234,9 +247,11 @@ struct PremiumUpgradeView: View {
                         .font(AppTypography.captionText)
                         .foregroundColor(.textTertiary)
                     
-                    Text("£4.99/mo")
-                        .font(.system(size: AppTypography.headline, weight: .bold))
-                        .foregroundColor(.textSecondary)
+                    if let monthlyProduct = purchaseManager.monthlyPremiumProduct {
+                        Text(monthlyProduct.displayPrice)
+                            .font(.system(size: AppTypography.headline, weight: .bold))
+                            .foregroundColor(.textSecondary)
+                    }
                 }
                 
                 Spacer()
