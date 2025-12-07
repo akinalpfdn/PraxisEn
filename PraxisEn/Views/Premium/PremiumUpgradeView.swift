@@ -184,15 +184,24 @@ struct PremiumUpgradeView: View {
                         .font(AppTypography.captionText)
                         .foregroundColor(.textTertiary)
                     
-                    if let yearlyProduct = purchaseManager.yearlyPremiumProduct {
-                    Text(yearlyProduct.displayPrice + "/year")
-                        .font(.system(size: AppTypography.headline, weight: .bold))
-                        .foregroundColor(.textSecondary)
-                } else {
-                    Text("Loading...")
-                        .font(.system(size: AppTypography.headline, weight: .bold))
-                        .foregroundColor(.textSecondary)
-                }
+                    HStack(spacing: AppSpacing.xs) {
+                        if let yearlyProduct = purchaseManager.yearlyPremiumProduct {
+                            let monthlyPrice = yearlyProduct.price / 12
+                            let currencySymbol = String(yearlyProduct.displayPrice.first ?? "$")
+
+                            Text("\(currencySymbol)\(String(format: "%.2f", NSDecimalNumber(decimal: monthlyPrice).doubleValue))/mo")
+                                .font(.system(size: AppTypography.headline, weight: .bold))
+                                .foregroundColor(.textSecondary)
+
+                            Text("\(yearlyProduct.displayPrice)/year")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.accentOrange)
+                        } else {
+                            Text("Loading...")
+                                .font(.system(size: AppTypography.headline, weight: .bold))
+                                .foregroundColor(.textSecondary)
+                        }
+                    }
                 }
                 
                 Spacer()
