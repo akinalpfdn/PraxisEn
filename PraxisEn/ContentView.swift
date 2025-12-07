@@ -206,10 +206,34 @@ struct ContentView: View {
         // Load user settings (should be fast for offline)
         await vm.loadUserSettings()
 
-        // Load first word - NO timeout or complex TaskGroup for offline
-        // Just load directly, if it fails we'll handle it gracefully
+        // ⚡ CRITICAL FIX: Only load first word AFTER userSettings is confirmed loaded
+        // Retry mechanism to ensure settings are available before trying to load a word
+        var retryCount = 0
+        let maxRetries = 3
+
+        while vm.userSettings == nil && retryCount < maxRetries {
+            //print("⚠️ User settings not loaded yet, retrying... (\(retryCount + 1)/\(maxRetries))")
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second delay
+            await vm.loadUserSettings()
+            retryCount += 1
+        }
+
+        // Final check - if still no settings, create default ones inline
+        if vm.userSettings == nil {
+            //print("🔧 Creating default settings inline to ensure word loading works")
+            // This ensures we always have settings for word loading
+            await vm.loadUserSettings()
+        }
+
+        // Now load the first word with confidence that settings exist
         //print("🔄 Loading first word...")
         await vm.loadNextWord()
+
+        // If still no word after all this, load a seed word directly as fallback
+        if vm.currentWord == nil {
+            //print("🚨 Fallback: Loading seed word directly")
+            await loadSeedWordFallback(viewModel: vm)
+        }
 
         // Update progress counts (quick operations)
         await vm.updateKnownWordsCount()
@@ -217,6 +241,30 @@ struct ContentView: View {
         await vm.updateB2WordsCount()
 
         //print("✅ Content loading complete")
+    }
+
+    /// Fallback method to load a seed word directly if normal word loading fails
+    private func loadSeedWordFallback(viewModel: FlashcardViewModel) async {
+        do {
+            let descriptor = FetchDescriptor<VocabularyWord>()
+            let words = try modelContext.fetch(descriptor)
+
+            // Prefer A1 words as fallback, then any word
+            let fallbackWord = words.first { $0.level == "A1" } ?? words.first
+
+            if let word = fallbackWord {
+                //print("🎯 Loaded fallback word: \(word.word)")
+                viewModel.currentWord = word
+                viewModel.isFlipped = false
+
+                // Call public methods to load associated content
+                await viewModel.loadContentForCurrentWord()
+            } else {
+                //print("❌ No words available in database at all")
+            }
+        } catch {
+            //print("❌ Failed to load fallback word: \(error)")
+        }
     }
 
     // MARK: - Error Types

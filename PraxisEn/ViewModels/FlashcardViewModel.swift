@@ -96,7 +96,8 @@ class FlashcardViewModel: ObservableObject {
     /// Load next word using spaced repetition algorithm with ODR-aware content loading
     func loadNextWord() async {
         guard let settings = userSettings else {
-            logger.error("No user settings found - cannot load next word")
+            logger.error("No user settings found - attempting fallback word loading")
+            await loadFallbackWord()
             return
         }
 
@@ -698,6 +699,39 @@ class FlashcardViewModel: ObservableObject {
                 ////print("❌ Error creating default settings: \(error)")
             }
         }
+    }
+
+    /// Fallback method to load any available word when settings are missing
+    private func loadFallbackWord() async {
+        do {
+            let descriptor = FetchDescriptor<VocabularyWord>()
+            let words = try modelContext.fetch(descriptor)
+
+            // Prefer A1 words as the ultimate fallback
+            let fallbackWord = words.first { $0.level == "A1" } ?? words.first
+
+            if let word = fallbackWord {
+                logger.info("Loaded fallback word: \(word.word)")
+                currentWord = word
+                addToHistory(word)
+
+                // Reset state for new word
+                isFlipped = false
+                hasSeenBackOfCard = false
+
+                await loadContentForCurrentWord()
+            } else {
+                logger.error("No words available in database for fallback")
+            }
+        } catch {
+            logger.error("Failed to load fallback word: \(error)")
+        }
+    }
+
+    /// Public method to load content for the current word (photo + examples)
+    func loadContentForCurrentWord() async {
+        await loadPhotoForCurrentWord()
+        await loadExamplesForCurrentWord()
     }
 
     /// Update user settings and trigger progress recalculation
