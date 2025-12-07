@@ -95,6 +95,11 @@ struct WelcomeView: View {
     private func completeOnboarding() {
         let generator = UIImpactFeedbackGenerator(style: .medium)
         generator.impactOccurred()
+
+        // Haptic feedback for completion
+        let successGenerator = UINotificationFeedbackGenerator()
+        successGenerator.notificationOccurred(.success)
+
         onDismiss()
     }
     

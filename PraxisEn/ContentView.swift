@@ -24,6 +24,9 @@ struct ContentView: View {
     @State private var initializationState: InitializationState = .loading
     @State private var errorMessage: String?
 
+    // Onboarding state
+    @State private var showWelcomeView = false
+
     enum InitializationState {
         case loading
         case databaseSetup
@@ -38,28 +41,38 @@ struct ContentView: View {
                 Color.creamBackground
                     .ignoresSafeArea()
 
-                switch initializationState {
-                case .loading:
-                    loadingView("Initializing...")
-
-                case .databaseSetup:
-                    loadingView("Setting up database...")
-
-                case .contentLoading:
-                    loadingView("Loading content...")
-
-                case .ready:
-                    if let viewModel = viewModel {
-                        FlashcardContentView(
-                            viewModel: viewModel,
-                            navigationPath: $navigationPath
-                        )
-                    } else {
-                        errorView("Failed to initialize content")
+                if showWelcomeView {
+                    WelcomeView {
+                        completeWelcomeOnboarding()
                     }
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .scale(scale: 1.1)),
+                        removal: .opacity.combined(with: .scale(scale: 0.9))
+                    ))
+                } else {
+                    switch initializationState {
+                    case .loading:
+                        loadingView("Initializing...")
 
-                case .error(let message):
-                    errorView(message)
+                    case .databaseSetup:
+                        loadingView("Setting up database...")
+
+                    case .contentLoading:
+                        loadingView("Loading content...")
+
+                    case .ready:
+                        if let viewModel = viewModel {
+                            FlashcardContentView(
+                                viewModel: viewModel,
+                                navigationPath: $navigationPath
+                            )
+                        } else {
+                            errorView("Failed to initialize content")
+                        }
+
+                    case .error(let message):
+                        errorView(message)
+                    }
                 }
             }
             .navigationDestination(for: NavigationDestination.self) { destination in
@@ -69,7 +82,7 @@ struct ContentView: View {
                 case .learnedWords:
                     LearnedWordsView()
                 case .settings:
-                    SettingsView() 
+                    SettingsView()
                 case .learnedFlashcard(let wordID, let allLearnedWordIDs):
                     let vm = LearnedFlashcardViewModel(
                         modelContext: modelContext,
@@ -82,7 +95,9 @@ struct ContentView: View {
         }
         .task {
             await initializeApp()
+            checkOnboardingStatus()
         }
+        .animation(.easeInOut(duration: 0.4), value: showWelcomeView)
 
     }
 
@@ -125,6 +140,22 @@ struct ContentView: View {
             .buttonStyle(PrimaryButtonStyle())
         }
         .padding()
+    }
+
+    // MARK: - Onboarding Logic
+
+    private func checkOnboardingStatus() {
+        if !OnboardingManager.shared.hasCompletedOnboarding {
+            showWelcomeView = true
+        }
+    }
+
+    private func completeWelcomeOnboarding() {
+        OnboardingManager.shared.markOnboardingCompleted()
+
+        withAnimation(.easeInOut(duration: 0.4)) {
+            showWelcomeView = false
+        }
     }
 
     // MARK: - Initialization Logic
