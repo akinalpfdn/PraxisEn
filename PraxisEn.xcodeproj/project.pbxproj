@@ -21702,11 +21702,11 @@
 				};
 			};
 			buildConfigurationList = F410BBCB2EC25E6600B63464 /* Build configuration list for PBXProject "PraxisEn" */;
-			developmentRegion = en;
+			developmentRegion = tr;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
 				Base,
+				tr,
 			);
 			mainGroup = F410BBC72EC25E6600B63464;
 			minimizedProjectReferenceProxies = 1;
