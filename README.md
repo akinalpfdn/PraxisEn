@@ -1,6 +1,4 @@
-# PraxisEn 🇬🇧🇹🇷
-
-![PraxisEn Banner](Media/banner.png)
+# PraxisEn
 
 > **Master English Vocabulary with the Oxford 3000™ & Spaced Repetition.**  
 > *No Ads. No Distractions. Just Learning.*
@@ -8,7 +6,7 @@
 [![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg?style=flat&logo=swift)](https://developer.apple.com/swift/)
 [![Platform](https://img.shields.io/badge/Platform-iOS%2017.0+-lightgrey.svg?style=flat&logo=apple)](https://developer.apple.com/ios/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Active_Development-green.svg?style=flat)]()
+[![Status](https://img.shields.io/badge/Status-Live-blue.svg?style=flat)]()
 
 ## 📖 Overview
 
@@ -27,11 +25,10 @@ Unlike other language apps that clutter the experience with gamification and ads
 
 ## 📱 Screenshots
 
-| Home Screen | Flashcard | Word Details |
+| Home Screen | Flashcard | Stats |
 |:-----------:|:---------:|:------------:|
 | <img src="Media/Simulator Screenshot - iPhone 17 Pro - 2025-12-07 at 17.31.26.png" width="250" /> | <img src="Media/Simulator Screenshot - iPhone 17 Pro - 2025-12-07 at 17.31.36.png" width="250" /> | <img src="Media/Simulator Screenshot - iPhone 17 Pro - 2025-12-07 at 17.31.48.png" width="250" /> |
-
-> *Note: Screenshots are placeholders. Please add actual screenshots to the `Media` folder.*
+ 
 
 ## 🛠 Technical Architecture
 
@@ -96,14 +93,14 @@ To handle **3,000+ words** and **700,000+ sentences** efficiently on a mobile de
     - [x] PDF Parsing & Data Extraction
     - [x] Hybrid Database Architecture Implementation
     - [x] Basic UI & Navigation
-- [ ] **Phase 2: Core Learning**
-    - [ ] Spaced Repetition Algorithm (SuperMemo-2 or similar)
-    - [ ] Statistics Dashboard
-    - [ ] Daily Word Notifications
-- [ ] **Phase 3: Polish & Polish**
-    - [ ] Audio Pronunciations (TTS)
-    - [ ] Image generation for vocabulary
-    - [ ] Widget Support
+- [x] **Phase 2: Core Learning**
+    - [x] Spaced Repetition Algorithm (SuperMemo-2 or similar)
+    - [x] Statistics Dashboard
+    - [x] Daily Word Notifications
+- [x] **Phase 3: Polish & Polish**
+    - [x] Audio Pronunciations (TTS)
+    - [x] Image generation for vocabulary
+    - [x] Widget Support
 
 ## 🤝 Contributing
 
