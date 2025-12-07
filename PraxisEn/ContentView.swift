@@ -292,6 +292,7 @@ struct ContentView: View {
 
 struct FlashcardContentView: View {
     @ObservedObject var viewModel: FlashcardViewModel
+    @ObservedObject private var subscriptionManager = SubscriptionManager.shared
     @Binding var navigationPath: [NavigationDestination]
     @State private var showMenuDropdown = false
 
@@ -414,8 +415,8 @@ struct FlashcardContentView: View {
                 current: viewModel.knownWordsCount,
                 total: viewModel.totalWordsCount,
                 showAnimation: false,
-                isPremiumUser: SubscriptionManager.shared.isPremiumActive,
-                b2WordCount: SubscriptionManager.shared.isPremiumActive ? 0 : viewModel.b2WordsCount
+                isPremiumUser: subscriptionManager.isPremiumActive,
+                b2WordCount: subscriptionManager.isPremiumActive ? 0 : viewModel.b2WordsCount
             )
         }
         .padding(.bottom, isSmallScreen ? 8 : 20)
@@ -512,7 +513,7 @@ struct FlashcardContentView: View {
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundColor(.textPrimary)
 
-                    if SubscriptionManager.shared.isPremiumActive {
+                    if subscriptionManager.isPremiumActive {
                         Image(systemName: "crown.fill")
                             .font(.system(size: 14))
                             .foregroundColor(.accentOrange)

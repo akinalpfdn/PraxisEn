@@ -72,11 +72,13 @@ class SubscriptionManager: ObservableObject {
     private func updatePublishedProperties() {
         guard let settings = userSettings else { return }
 
+        // Update daily swipe count first (not on main thread)
+        updateDailySwipeCount()
+
         DispatchQueue.main.async {
             self.subscriptionTier = settings.subscriptionTier
             self.isPremiumActive = settings.subscriptionIsActive && settings.subscriptionTier == .premium
             self.subscriptionExpirationDate = settings.subscriptionExpirationDate
-            self.updateDailySwipeCount()
         }
     }
 
@@ -126,16 +128,17 @@ class SubscriptionManager: ObservableObject {
 
     /// Returns true if the user can make another swipe (card advance)
     func canMakeSwipe() -> Bool {
+        // If no settings loaded yet, allow swipes by default for new users
         guard let settings = userSettings else {
-            //print("❌ canMakeSwipe: No user settings found")
-            return false
+            //print("⚠️ canMakeSwipe: No user settings found, allowing swipes by default")
+            return true
         }
 
         // First check if we need to reset the daily counter (new day)
         updateDailySwipeCount()
 
-        // Premium users have unlimited swipes
-        if settings.subscriptionTier == .premium && settings.subscriptionIsActive {
+        // Premium users have unlimited swipes - use the reactive @Published property
+        if isPremiumActive {
             //print("✅ canMakeSwipe: Premium user with active subscription")
             return true
         }
@@ -151,13 +154,19 @@ class SubscriptionManager: ObservableObject {
         guard let settings = userSettings else { return }
 
         // Only track swipes for free users
-        if settings.subscriptionTier != .premium || !settings.subscriptionIsActive {
+        if !isPremiumActive {
+            // Reset if new day first
             updateDailySwipeCount()
 
             if settings.dailySwipesUsed < freeTierSwipeLimit {
                 settings.dailySwipesUsed += 1
                 settings.updatedAt = Date()
                 saveUserSettings()
+
+                // Update published property immediately
+                DispatchQueue.main.async {
+                    self.dailySwipesRemaining = max(0, self.freeTierSwipeLimit - settings.dailySwipesUsed)
+                }
             }
         }
     }
@@ -179,8 +188,9 @@ class SubscriptionManager: ObservableObject {
         }
 
         // Update published property
+        let remaining = max(0, freeTierSwipeLimit - settings.dailySwipesUsed)
         DispatchQueue.main.async {
-            self.dailySwipesRemaining = max(0, self.freeTierSwipeLimit - settings.dailySwipesUsed)
+            self.dailySwipesRemaining = remaining
         }
 
         //print("📊 Daily swipe status: \(settings.dailySwipesUsed)/\(freeTierSwipeLimit) used")
@@ -215,6 +225,11 @@ class SubscriptionManager: ObservableObject {
         settings.subscriptionExpirationDate = expirationDate
         settings.updatedAt = Date()
 
+        // Update @Published properties for immediate UI update
+        isPremiumActive = true
+        subscriptionTier = .premium
+        subscriptionExpirationDate = expirationDate
+
         saveUserSettings()
     }
 
@@ -226,6 +241,11 @@ class SubscriptionManager: ObservableObject {
         settings.subscriptionIsActive = false
         settings.subscriptionExpirationDate = nil
         settings.updatedAt = Date()
+
+        // Update @Published properties for immediate UI update
+        isPremiumActive = false
+        subscriptionTier = .free
+        subscriptionExpirationDate = nil
 
         saveUserSettings()
 
