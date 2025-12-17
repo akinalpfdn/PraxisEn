@@ -311,6 +311,16 @@ struct PremiumUpgradeView: View {
     private var legalLinksSection: some View {
         VStack(spacing: AppSpacing.sm) {
              
+            HStack(spacing: AppSpacing.md) {
+                Link("Privacy Policy", destination: URL(string: "https://github.com/akinalpfdn/PraxisEn/blob/main/privacy-policy.md")!)
+                
+                Text("•")
+                    .foregroundColor(.textTertiary)
+                
+                Link("Terms of Use", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+            }
+            .font(AppTypography.captionText)
+            .foregroundColor(.textSecondary)
             
             Text("Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.")
                 .font(AppTypography.captionText)
