@@ -1,12 +1,14 @@
 import Foundation
 import StoreKit
 internal import Combine
+
 /// Handles in-app purchases using StoreKit 2
 @MainActor
 class PurchaseManager: ObservableObject {
     static let shared = PurchaseManager()
 
     // MARK: - Product IDs
+    // "let" properties are thread-safe by default
     private let productIDs: Set<String> = [
         "praxisen_premium_monthly",
         "praxisen_premium_yearly"
@@ -29,6 +31,14 @@ class PurchaseManager: ObservableObject {
         updateListenerTask?.cancel()
     }
 
+    // MARK: - Helper Methods
+    
+    /// Checks if the product ID belongs to a premium subscription
+    /// marked 'nonisolated' so it can be called from background tasks
+    nonisolated private func isPremiumProduct(_ productID: String) -> Bool {
+        return productIDs.contains(productID)
+    }
+
     // MARK: - Product Management
 
     /// Loads available products from the App Store
@@ -36,22 +46,14 @@ class PurchaseManager: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        //print("🛒 Starting to load products with IDs: \(productIDs)")
-
         do {
             products = try await Product.products(for: productIDs)
-            //print("✅ Loaded \(products.count) products:")
-            for product in products {
-                //print("   - \(product.id): \(product.displayPrice) (\(product.type))")
-            }
-
-            // Check if specific products are available
-            //print("📦 Monthly product available: \(monthlyPremiumProduct != nil)")
-            //print("📦 Yearly product available: \(yearlyPremiumProduct != nil)")
-
+            
+            // Sort products by price (optional, but good for UI consistency)
+            products.sort { $0.price < $1.price }
+            
         } catch {
-            //print("❌ Failed to load products: \(error)")
-            //print("❌ Error details: \(error.localizedDescription)")
+            print("❌ Failed to load products: \(error)")
             throw PurchaseError.productLoadFailed
         }
     }
@@ -86,36 +88,18 @@ class PurchaseManager: ObservableObject {
             case .success(let verification):
                 let transaction = try checkVerified(verification)
 
-                // Update subscription manager with successful purchase
-                await SubscriptionManager.shared.activatePremiumSubscription(
-                    startDate: transaction.purchaseDate,
-                    expirationDate: transaction.expirationDate
-                )
-
-                // Post notification for UI components to react
-                NotificationCenter.default.post(
-                    name: .subscriptionDidActivate,
-                    object: nil,
-                    userInfo: [
-                        "startDate": transaction.purchaseDate,
-                        "expirationDate": transaction.expirationDate as Any
-                    ]
-                )
-
-                await transaction.finish() // Consume the transaction
+                await handleSubscriptionTransaction(transaction)
+                await transaction.finish()
+                
                 purchaseState = .purchased
-                //print("✅ Premium purchase successful")
-
                 return transaction
 
             case .pending:
                 purchaseState = .pending
-                //print("📱 Purchase pending, requires approval")
                 throw PurchaseError.purchasePending
 
             case .userCancelled:
                 purchaseState = .cancelled
-                //print("❌ Purchase cancelled by user")
                 throw PurchaseError.purchaseCancelled
 
             @unknown default:
@@ -125,7 +109,6 @@ class PurchaseManager: ObservableObject {
 
         } catch {
             purchaseState = .failed
-            //print("❌ Purchase failed: \(error)")
             throw error is PurchaseError ? error : PurchaseError.purchaseFailed
         }
     }
@@ -137,127 +120,91 @@ class PurchaseManager: ObservableObject {
 
         do {
             purchaseState = .restoring
-
-            var hasActiveSubscription = false
-            var subscriptionExpiration: Date?
+            
+            // We only need to find ONE valid active subscription to unlock the app
+            var foundActiveSubscription = false
 
             for await result in Transaction.currentEntitlements {
-                let verifiedTransaction = try checkVerified(result)
+                let transaction = try checkVerified(result)
 
-                // Check for premium subscription (monthly or yearly)
-                if verifiedTransaction.productID == "praxisen_premium_monthly" ||
-                   verifiedTransaction.productID == "praxisen_premium_yearly" {
-                    if verifiedTransaction.revocationDate == nil {
-                        // Subscription is not revoked
-                        if verifiedTransaction.expirationDate ?? Date.distantFuture > Date() {
-                            // Subscription is active
-                            hasActiveSubscription = true
-                            subscriptionExpiration = verifiedTransaction.expirationDate
-                        }
+                // Check if this is a valid premium subscription
+                if isPremiumProduct(transaction.productID) && transaction.revocationDate == nil {
+                    
+                    if let expirationDate = transaction.expirationDate, expirationDate > Date() {
+                        // Found valid active subscription
+                        await SubscriptionManager.shared.activatePremiumSubscription(
+                            startDate: transaction.purchaseDate,
+                            expirationDate: expirationDate
+                        )
+                        foundActiveSubscription = true
+                        purchaseState = .restored
+                        // Once found, we can stop checking
+                        return
                     }
                 }
             }
 
-            // Update subscription manager based on restored status
-            if hasActiveSubscription {
-                // Determine if it's monthly (30 days) or yearly (365 days) based on product ID found
-                let estimatedDuration = subscriptionExpiration?.timeIntervalSinceNow ?? 0
-                let isYearly = estimatedDuration > 180 // More than 6 months = yearly
-
-                let startDate: Date
-                if isYearly {
-                    startDate = subscriptionExpiration?.addingTimeInterval(-365 * 24 * 60 * 60) ?? Date()
-                } else {
-                    startDate = subscriptionExpiration?.addingTimeInterval(-30 * 24 * 60 * 60) ?? Date()
-                }
-
-                await SubscriptionManager.shared.activatePremiumSubscription(
-                    startDate: startDate,
-                    expirationDate: subscriptionExpiration
-                )
-                purchaseState = .restored
-            } else {
+            // If loop finishes and nothing was found
+            if !foundActiveSubscription {
                 await SubscriptionManager.shared.deactivatePremiumSubscription()
-                purchaseState = .idle
+                purchaseState = .idle // Or keep it as is, implying no restore happened
             }
 
         } catch {
             purchaseState = .failed
-            //print("❌ Restore failed: \(error)")
             throw error is PurchaseError ? error : PurchaseError.restoreFailed
         }
     }
 
-    /// Checks current subscription status
+    /// Checks current subscription status quietly (on app launch)
     func checkSubscriptionStatus() async {
         do {
-            var hasActiveSubscription = false
-            var subscriptionExpiration: Date?
-
             for await result in Transaction.currentEntitlements {
-                let verifiedTransaction = try checkVerified(result)
+                let transaction = try checkVerified(result)
 
-                if verifiedTransaction.productID == "praxisen_premium_monthly" ||
-                   verifiedTransaction.productID == "praxisen_premium_yearly" {
-                    if verifiedTransaction.revocationDate == nil {
-                        if verifiedTransaction.expirationDate ?? Date.distantFuture > Date() {
-                            hasActiveSubscription = true
-                            subscriptionExpiration = verifiedTransaction.expirationDate
-                        }
+                if isPremiumProduct(transaction.productID) && transaction.revocationDate == nil {
+                    if let expirationDate = transaction.expirationDate, expirationDate > Date() {
+                        
+                        // Active subscription found. Use the actual purchase date from Apple.
+                        await SubscriptionManager.shared.activatePremiumSubscription(
+                            startDate: transaction.purchaseDate,
+                            expirationDate: expirationDate
+                        )
+                        return // Exit as soon as we verify access
                     }
                 }
             }
 
-            if hasActiveSubscription {
-                // Determine if it's monthly (30 days) or yearly (365 days) based on duration
-                let estimatedDuration = subscriptionExpiration?.timeIntervalSinceNow ?? 0
-                let isYearly = estimatedDuration > 180 // More than 6 months = yearly
-
-                let startDate: Date
-                if isYearly {
-                    startDate = subscriptionExpiration?.addingTimeInterval(-365 * 24 * 60 * 60) ?? Date()
-                } else {
-                    startDate = subscriptionExpiration?.addingTimeInterval(-30 * 24 * 60 * 60) ?? Date()
-                }
-
-                await SubscriptionManager.shared.activatePremiumSubscription(
-                    startDate: startDate,
-                    expirationDate: subscriptionExpiration
-                )
-                //print("✅ Active subscription verified")
-            } else {
-                SubscriptionManager.shared.refreshSubscriptionStatus()
-                //print("ℹ️ No active subscription")
-            }
+            // If we exit the loop, no active subscription was found
+            await SubscriptionManager.shared.deactivatePremiumSubscription()
 
         } catch {
-            //print("❌ Subscription status check failed: \(error)")
-            SubscriptionManager.shared.refreshSubscriptionStatus()
+            // Silently fail on check status, just ensure local state is safe
+            await SubscriptionManager.shared.refreshSubscriptionStatus()
         }
     }
 
     /// Get subscription renewal information
     func getSubscriptionInfo() async -> SubscriptionStatus? {
         do {
+            // Iterate entitlements to find the active one
             for await result in Transaction.currentEntitlements {
-                let verifiedTransaction = try checkVerified(result)
+                let transaction = try checkVerified(result)
 
-                if verifiedTransaction.productID == "praxisen_premium_monthly" ||
-                   verifiedTransaction.productID == "praxisen_premium_yearly" {
-                    if verifiedTransaction.revocationDate == nil {
-                        let isActive = verifiedTransaction.expirationDate ?? Date.distantFuture > Date()
-                        return SubscriptionStatus(
-                            isActive: isActive,
-                            expirationDate: verifiedTransaction.expirationDate,
-                            purchaseDate: verifiedTransaction.purchaseDate,
-                            originalTransactionId: String(verifiedTransaction.originalID)
-                        )
-                    }
+                if isPremiumProduct(transaction.productID) && transaction.revocationDate == nil {
+                    // Check if it's strictly active
+                    let isActive = (transaction.expirationDate ?? Date.distantFuture) > Date()
+                    
+                    return SubscriptionStatus(
+                        isActive: isActive,
+                        expirationDate: transaction.expirationDate,
+                        purchaseDate: transaction.purchaseDate,
+                        originalTransactionId: String(transaction.originalID)
+                    )
                 }
             }
             return nil
         } catch {
-            //print("❌ Failed to get subscription info: \(error)")
             return nil
         }
     }
@@ -276,23 +223,22 @@ class PurchaseManager: ObservableObject {
 
     // MARK: - Transaction Listener
 
-    /// Listens for transaction updates
+    /// Listens for transaction updates (e.g. renewals happening in background)
     private func listenForTransactions() -> Task<Void, Error> {
         return Task.detached {
             for await result in Transaction.updates {
                 do {
+                    // Because this task is detached, we need 'nonisolated' access to helpers
                     let transaction = try self.checkVerified(result)
 
-                    // Handle the transaction
-                    if transaction.productID == "praxisen_premium_monthly" ||
-                       transaction.productID == "praxisen_premium_yearly" {
+                    if self.isPremiumProduct(transaction.productID) {
                         await self.handleSubscriptionTransaction(transaction)
                     }
 
                     await transaction.finish()
 
                 } catch {
-                    //print("❌ Transaction verification failed: \(error)")
+                    print("❌ Transaction verification failed in listener: \(error)")
                 }
             }
         }
@@ -301,23 +247,18 @@ class PurchaseManager: ObservableObject {
     /// Handles subscription-related transactions
     private func handleSubscriptionTransaction(_ transaction: Transaction) async {
         if transaction.revocationDate == nil {
-            // Subscription is active
-            let isActive = transaction.expirationDate ?? Date.distantFuture > Date()
-
-            if isActive {
-                SubscriptionManager.shared.activatePremiumSubscription(
+            // Check expiry
+            if let expirationDate = transaction.expirationDate, expirationDate > Date() {
+                await SubscriptionManager.shared.activatePremiumSubscription(
                     startDate: transaction.purchaseDate,
-                    expirationDate: transaction.expirationDate
+                    expirationDate: expirationDate
                 )
-                //print("✅ Subscription activated/updated")
             } else {
-                SubscriptionManager.shared.deactivatePremiumSubscription()
-                //print("ℹ️ Subscription expired")
+                await SubscriptionManager.shared.deactivatePremiumSubscription()
             }
         } else {
-            // Subscription was revoked
-            SubscriptionManager.shared.deactivatePremiumSubscription()
-            //print("ℹ️ Subscription revoked")
+            // Subscription was revoked (refunded, etc.)
+            await SubscriptionManager.shared.deactivatePremiumSubscription()
         }
     }
 }
