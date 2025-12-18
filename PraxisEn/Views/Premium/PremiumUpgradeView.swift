@@ -6,29 +6,30 @@ struct PremiumUpgradeView: View {
     @ObservedObject private var purchaseManager = PurchaseManager.shared
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: AppSpacing.xl) {
                     // Header Section
                     headerSection
-                    
+
                     // Features Comparison
                     featuresSection
-                    
+
                     // Pricing Section
                     pricingSection
-                    
+
                     // Restore Section
                     restoreSection
-                    
+
                     // Legal Links
                     legalLinksSection
-                    
+
                     Spacer(minLength: 50)
                 }
                 .padding(AppSpacing.lg)
             }
             .background(Color.creamBackground)
+            .navigationTitle("Premium Upgrade")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -49,7 +50,7 @@ struct PremiumUpgradeView: View {
             }
         }
     }
-    
+
     // MARK: - Header Section
     
     private var headerSection: some View {

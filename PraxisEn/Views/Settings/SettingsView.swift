@@ -12,36 +12,34 @@ struct SettingsView: View {
     @StateObject private var subscriptionManager = SubscriptionManager.shared
 
     var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack( ) {
-                    if isLoading {
-                        ProgressView("Loading settings...")
-                            .font(AppTypography.bodyText)
-                            .foregroundColor(.textSecondary)
-                            .padding(.top, 50)
-                    } else if let settings = settings {
-                        settingsContent(settings: settings)
-                    } else {
-                        noSettingsView()
-                    }
+        ScrollView {
+            VStack( ) {
+                if isLoading {
+                    ProgressView("Loading settings...")
+                        .font(AppTypography.bodyText)
+                        .foregroundColor(.textSecondary)
+                        .padding(.top, 50)
+                } else if let settings = settings {
+                    settingsContent(settings: settings)
+                } else {
+                    noSettingsView()
                 }
-                .padding(AppSpacing.lg)
             }
-            .background(Color.creamBackground)
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.large)
-            .task {
-                await loadSettings()
+            .padding(AppSpacing.lg)
+        }
+        .background(Color.creamBackground)
+        .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.large)
+        .task {
+            await loadSettings()
+        }
+        .alert("Reset All Progress", isPresented: $showResetConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Reset Everything", role: .destructive) {
+                performFullReset()
             }
-            .alert("Reset All Progress", isPresented: $showResetConfirmation) {
-                Button("Cancel", role: .cancel) { }
-                Button("Reset Everything", role: .destructive) {
-                    performFullReset()
-                }
-            } message: {
-                Text("This will permanently delete all your learning progress:\n\n• Reset all word learning status\n• Clear learned words history\n• Restart from A1 in progressive mode\n\nThis action cannot be undone.")
-            }
+        } message: {
+            Text("This will permanently delete all your learning progress:\n\n• Reset all word learning status\n• Clear learned words history\n• Restart from A1 in progressive mode\n\nThis action cannot be undone.")
         }
         .fullScreenCover(isPresented: $showUpgradeView) {
             PremiumUpgradeView()

@@ -7,7 +7,7 @@ struct SubscriptionStatusView: View {
     @State private var subscriptionInfo: SubscriptionStatus?
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: AppSpacing.xl) {
                     // Status Header
@@ -27,6 +27,7 @@ struct SubscriptionStatusView: View {
                 .padding(AppSpacing.lg)
             }
             .background(Color.creamBackground)
+            .navigationTitle("Subscription Status")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -37,9 +38,9 @@ struct SubscriptionStatusView: View {
                     .foregroundColor(.accentOrange)
                 }
             }
-        }
-        .task {
-            await loadSubscriptionInfo()
+            .task {
+                await loadSubscriptionInfo()
+            }
         }
     }
 
