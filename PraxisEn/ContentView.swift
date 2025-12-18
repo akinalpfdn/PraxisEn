@@ -338,22 +338,48 @@ struct FlashcardContentView: View {
 
     private func mainContent(geometry: GeometryProxy) -> some View {
         let isSmallScreen = geometry.size.height < 700
+        let isIPad = geometry.size.width >= 768 // iPad detection
+        let isIPadPortrait = isIPad && geometry.size.height > geometry.size.width
+
+        // Calculate dynamic spacer heights
+        let topSpacerHeight: CGFloat = {
+            if isIPadPortrait {
+                return geometry.size.height * 0.15 // 15% of available height
+            } else if isIPad {
+                return 40 // Fixed for landscape
+            } else {
+                return isSmallScreen ? 10 : 20
+            }
+        }()
+
+        let bottomSpacerHeight: CGFloat = {
+            if isIPadPortrait {
+                return geometry.size.height * 0.12 // 12% of available height
+            } else if isIPad {
+                return 40 // Fixed for landscape
+            } else {
+                return isSmallScreen ? 10 : 30
+            }
+        }()
 
         return VStack(spacing: 0) {
             headerView
                 .zIndex(1.0)
                 .padding(.top, isSmallScreen ? 0 : 10)
 
-            Spacer(minLength: isSmallScreen ? 10 : 20)
+            Spacer()
+                .frame(height: topSpacerHeight)
 
             flashcardArea(geometry: geometry, isSmallScreen: isSmallScreen)
 
-            Spacer(minLength: isSmallScreen ? 10 : 30)
+            Spacer()
+                .frame(height: bottomSpacerHeight)
 
             bottomSection(isSmallScreen: isSmallScreen)
         }
-        .padding(AppSpacing.lg)
-        .frame(width: geometry.size.width, height: geometry.size.height)
+        .padding(.horizontal, AppSpacing.lg)
+        .padding(.vertical, isIPadPortrait ? 0 : (isIPad ? AppSpacing.xl : AppSpacing.lg))
+        .frame(width: geometry.size.width, height: geometry.size.height, alignment: .center)
     }
 
     // MARK: - Flashcard Area
