@@ -55,7 +55,11 @@ struct LearnedWordsView: View {
     }
 
     var body: some View {
-        Group {
+        ZStack {
+            // Ensure cream background fills the entire screen
+            Color.creamBackground
+                .ignoresSafeArea()
+
             if learnedWords.isEmpty {
                 emptyState
             } else {
@@ -67,12 +71,17 @@ struct LearnedWordsView: View {
                             }
                         }
                         .buttonStyle(.plain)
+                        .listRowBackground(Color.white)
+                        .listRowSeparator(.hidden)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
                     }
                 }
-                .searchable(text: $searchText, prompt: "Search learned words")
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search learned words")
             }
         }
-        .background(Color.creamBackground.ignoresSafeArea())
         .navigationTitle("Learned Words")
         .navigationBarTitleDisplayMode(.large)
     }
