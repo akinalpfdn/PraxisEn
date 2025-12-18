@@ -80,10 +80,12 @@ struct LearnedWordsView: View {
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
                 .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search learned words")
+                .accentColor(.accentOrange) // Theme-aware accent color
             }
         }
         .navigationTitle("Learned Words")
         .navigationBarTitleDisplayMode(.large)
+        .preferredColorScheme(.light) // Force light theme for navigation
     }
 
     private var emptyState: some View {

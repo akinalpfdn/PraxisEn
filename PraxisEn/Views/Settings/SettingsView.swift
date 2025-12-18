@@ -30,6 +30,7 @@ struct SettingsView: View {
         .background(Color.creamBackground)
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.large)
+        .preferredColorScheme(.light) // Force light theme for navigation
         .task {
             await loadSettings()
         }

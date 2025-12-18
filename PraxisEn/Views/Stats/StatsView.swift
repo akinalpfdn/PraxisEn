@@ -51,6 +51,7 @@ struct StatsView: View {
         .background(Color.creamBackground.ignoresSafeArea())
         .navigationTitle("Statistics")
         .navigationBarTitleDisplayMode(.large)
+        .preferredColorScheme(.light) // Force light theme for navigation
         .task {
             await loadData()
         }
