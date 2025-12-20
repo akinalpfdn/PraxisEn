@@ -190,11 +190,11 @@ struct PremiumUpgradeView: View {
                             let monthlyPrice = yearlyProduct.price / 12
                             let currencySymbol = String(yearlyProduct.displayPrice.first ?? "$")
 
-                            Text("\(currencySymbol)\(String(format: "%.2f", NSDecimalNumber(decimal: monthlyPrice).doubleValue))/mo")
+                            Text("\(yearlyProduct.displayPrice)/year")
                                 .font(.system(size: AppTypography.headline, weight: .bold))
                                 .foregroundColor(.textSecondary)
 
-                            Text("\(yearlyProduct.displayPrice)/year")
+                            Text("\(currencySymbol)\(String(format: "%.2f", NSDecimalNumber(decimal: monthlyPrice).doubleValue))/mo")
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundColor(.accentOrange)
                         } else {
